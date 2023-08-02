@@ -1,6 +1,3 @@
-
-
-
 import os
 import pandas as pd
 
@@ -22,34 +19,20 @@ class ProcessData():
     # TODO : Handle different Hz, 
     #       convert time column to HH:MM:SS and add date column (or should this be combined?) - the acutal time and date needs to start from a given time and date.
     #       note: havent handled headers because the data files i was processing didnt have it
-    #       It takes time to process the data of only 4 files so we will need to optimise it if possible
     def clean_data(self, df):
-        cleaned_rows = []
+      mask = df.iloc[:, 0].str.startswith('*')
+      indices = df.loc[mask, df.columns[0]].str[1:].astype(int).ffill().fillna(0).astype(int)
+      df['seconds'] = indices
 
-        current_index = None
-        combined_rows = []
+      # Forward fill the 4th column
+      df['seconds'] = df['seconds'].fillna(method='ffill').astype(int)
 
-        for index, row in df.iterrows():
-            print(index, len(df))
-            if row.iloc[0].startswith('*'):
-                current_index = row.iloc[0][1:]
-
-                if combined_rows:
-                    combined_rows = [r + [current_index] for r in combined_rows]
-                    cleaned_rows.extend(combined_rows)
-
-                combined_rows = []
-            else:
-                combined_rows.append(list(row))
-
-        if combined_rows and current_index:
-            combined_rows = [r + [current_index] for r in combined_rows]
-            cleaned_rows.extend(combined_rows)
-        return pd.DataFrame(cleaned_rows)
+      df = df.loc[~mask].reset_index(drop=True)
+      return df
         
     def save_to_csv(self, df, file_name):
         df.to_csv(file_name, index=False)
-        
+
 
 if __name__ == "__main__":
     process_data = ProcessData()
