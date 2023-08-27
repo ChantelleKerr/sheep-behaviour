@@ -7,12 +7,9 @@ import pandas as pd
 
 class ProcessData():
     def read_data(self, folder_path):
-        """
-        We need to change this function it currently deletes any rows after it finds the header in the first 
-        """
         dfs = []
         file_names = sorted(os.listdir(folder_path))
-        header = None  # Initialize header to None
+        header = None
 
         for file in file_names:
             print(f'Processing: {file}')
