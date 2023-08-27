@@ -57,16 +57,9 @@ class ProcessData():
         df = df.drop(columns=['LAT', 'LON', 'DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND'])
         
         # Calculate datetime
-        date_column = np.empty(len(df), dtype=object)
-        current_datetime = initial_datetime
-        for index, row in df.iterrows():
-            date_column[index] = current_datetime.strftime('%d/%m/%Y %H:%M:%S')
-            
-            if row["ACCEL_X"].startswith("*") and index != 0:
-                current_datetime += pd.Timedelta(seconds=1)
-
-        # Assign the date_column to the DataFrame
-        df['DATE'] = date_column
+        mask = (df["ACCEL_X"].str.startswith('*')) & (df.index != 0)
+        seconds_to_add = mask.cumsum()
+        df['DATE'] = (initial_datetime + seconds_to_add.astype('timedelta64[s]')).dt.strftime('%d/%m/%Y %H:%M:%S')
 
         # Remove rows starting with "*"
         mask = df.iloc[:, 0].str.startswith('*') 
