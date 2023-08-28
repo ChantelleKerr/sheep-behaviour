@@ -2,10 +2,6 @@ import time
 
 from data_cleaning.data_clean import ProcessData
 
-#from data_cleaning.multiprocess import ProcessData
-
-
-
 ## Application starting point
 ## Run python3 main.py or python main.py
 if __name__ == "__main__":
@@ -37,4 +33,4 @@ if __name__ == "__main__":
     print(f"Read time: {total_read_time} seconds")
     print(f"Clean time: {total_clean_time} seconds")
     print(f"Write time: {total_write_time} seconds")
-    print(f"TotalElapsed time: {elapsed_time} seconds")
+    print(f"Total Elapsed time: {elapsed_time} seconds")

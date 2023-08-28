@@ -53,10 +53,12 @@ class ProcessData():
 
         df = df.drop(columns=['LAT', 'LON', 'DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND'])
         
-        # Calculate datetime
-        mask = (df["ACCEL_X"].str.startswith('*')) & (df.index != 0)
-        seconds_to_add = mask.cumsum()
-        df['DATE'] = (initial_datetime + seconds_to_add.astype('timedelta64[s]')).dt.strftime('%d/%m/%Y %H:%M:%S')
+        # # Calculate datetime
+        accel_x = df['ACCEL_X'].values
+        mask = np.logical_and([s.startswith('*') for s in accel_x], df.index != 0)
+        seconds_to_add = np.cumsum(mask.astype(int))
+        df['DATE'] = (initial_datetime + pd.to_timedelta(seconds_to_add, unit='s')).strftime('%d/%m/%Y %H:%M:%S')
+
 
         # Remove rows starting with "*"
         mask = df.iloc[:, 0].str.startswith('*') 
