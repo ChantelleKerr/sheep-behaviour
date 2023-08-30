@@ -37,19 +37,14 @@ class ProcessData():
         datetime_format = '%d %m %Y %H %M %S'
         datetime_str = ' '.join(map(str, values_of_first_valid_row))
         datetime_obj = pd.to_datetime(datetime_str, format=datetime_format)
-        
-
-        print("First Date:",datetime_obj)
 
         # Find the current overall second at the date and time above
         index_of_first_valid_row = first_valid_row.name
         seconds_at_first_valid_date = df.iloc[index_of_first_valid_row + 1]['ACCEL_X']
         seconds_at_first_valid_date = int(seconds_at_first_valid_date.replace('*', ''))
-        print("Current Second:", seconds_at_first_valid_date - 1) # Minus 1 because this is the next second (we want the previous so it matches the date above)
 
         # Calculate the initial start date
-        initial_datetime = datetime_obj - pd.Timedelta(seconds=seconds_at_first_valid_date)
-        print("INITIAL DATE:", initial_datetime)
+        initial_datetime = datetime_obj - pd.Timedelta(seconds=seconds_at_first_valid_date-1) # Minus 1 because this is the next second (we want the previous so it matches the date above)
         
         df = df.drop(columns=['LAT', 'LON', 'DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND'])
         
@@ -65,7 +60,6 @@ class ProcessData():
         df.loc[mask, 'DATE'] = initial_datetime + pd.to_timedelta(seconds_to_add[mask], unit='s')
         df['DATE'] = df['DATE'].shift(1)
 
-        
         # Remove -2048,-2048,-2048 and shift the date one index before removing
         mask = (df['ACCEL_X'] == '-2048') & (df['ACCEL_Y'] == -2048) & (df['ACCEL_Z'] == -2048)
         mask_indices = df.index[mask]
