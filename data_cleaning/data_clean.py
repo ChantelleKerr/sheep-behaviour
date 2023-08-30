@@ -65,13 +65,19 @@ class ProcessData():
         df.loc[mask, 'DATE'] = initial_datetime + pd.to_timedelta(seconds_to_add[mask], unit='s')
         df['DATE'] = df['DATE'].shift(1)
 
-        # TODO: Remove -2048,-2048,-2048 and shift the date one index before removing
-
-
-
+        
+        # Remove -2048,-2048,-2048 and shift the date one index before removing
+        mask = (df['ACCEL_X'] == '-2048') & (df['ACCEL_Y'] == -2048) & (df['ACCEL_Z'] == -2048)
+        mask_indices = df.index[mask]
+        if not mask_indices.empty:
+            next_index = mask_indices + 1
+            df.loc[next_index, 'DATE'] = df.loc[mask_indices, 'DATE'].values
+        
         # Remove rows starting with "*"
-        mask = df.iloc[:, 0].str.startswith('*') 
-        df = df[~mask]
+        mask2 = df.iloc[:, 0].str.startswith('*') 
+
+        combined_mask = mask | mask2
+        df = df[~combined_mask]
 
         return df
         
