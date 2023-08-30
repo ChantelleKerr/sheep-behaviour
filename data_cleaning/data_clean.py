@@ -69,8 +69,10 @@ class ProcessData():
         
         # Remove rows starting with "*"
         mask2 = df.iloc[:, 0].str.startswith('*') 
+        # Remove 0,0,0 rows
+        mask3 = (df['ACCEL_X'] == '0') & (df['ACCEL_Y'] == 0) & (df['ACCEL_Z'] == 0)
 
-        combined_mask = mask | mask2
+        combined_mask = mask | mask2 | mask3
         df = df[~combined_mask]
 
         return df
