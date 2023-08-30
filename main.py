@@ -11,16 +11,22 @@ if __name__ == "__main__":
     folder_path = "test_data/sheep1"  # hardcoded data path
     
     read_time = time.time()
+    print("Reading file in progress")
     combined_data = process_data.read_data(folder_path)
     read_end_time = time.time()
+    print("Completed file read")
    
+    print("Cleaning data in progress")
     start_clean_time = time.time()
     cleaned_data = process_data.clean_data(combined_data)
     end_clean_time = time.time()
+    print("Completed data cleaning")
     
+    print("Writing to CSV in progress")
     start_write_time = time.time()
     process_data.save_to_csv(cleaned_data, "test_data/sheep1/cleaned.csv")
     end_write_time = time.time()
+    print("Completed writing")
 
 
     end_time = time.time()

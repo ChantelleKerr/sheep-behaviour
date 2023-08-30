@@ -50,14 +50,23 @@ class ProcessData():
         # Calculate the initial start date
         initial_datetime = datetime_obj - pd.Timedelta(seconds=seconds_at_first_valid_date)
         print("INITIAL DATE:", initial_datetime)
-
+        
         df = df.drop(columns=['LAT', 'LON', 'DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND'])
         
-        # # Calculate datetime
-        accel_x = df['ACCEL_X'].values
-        mask = np.logical_and([s.startswith('*') for s in accel_x], df.index != 0)
-        seconds_to_add = np.cumsum(mask.astype(int))
-        df['DATE'] = (initial_datetime + pd.to_timedelta(seconds_to_add, unit='s')).strftime('%d/%m/%Y %H:%M:%S')
+        
+        mask = np.logical_and([s.startswith('*') for s in df['ACCEL_X']], df.index % 1560 == 0)
+        
+        # Calculates how many minutes since the initial date (based on the mask)
+        seconds_to_add = np.zeros(len(df))
+        seconds_to_add[mask] = np.arange(0, mask.sum()) * 60
+        
+        # Calculates a new date from the initial date for every minute
+        df['DATE'] = None
+        df.loc[mask, 'DATE'] = initial_datetime + pd.to_timedelta(seconds_to_add[mask], unit='s')
+        df['DATE'] = df['DATE'].shift(1)
+
+        # TODO: Remove -2048,-2048,-2048 and shift the date one index before removing
+
 
 
         # Remove rows starting with "*"
