@@ -6,13 +6,13 @@ filepath = None
 
 def openFile():
     global filepath
-    filepath = filedialog.askopenfilename(filetypes=[("Text Files", "*.txt")])
+    filepath = filedialog.askopenfilename(filetypes=[("CSV Files", "*.csv")])
     if not filepath:
         return
 
     try: 
         file = open(filepath, 'r') #reading file 
-        window.title(f"Simple Text Editor - {filepath}")
+        window.title(f"Sheep File - {filepath}")
         clean_file_button["state"] = NORMAL
 
         file.close()
