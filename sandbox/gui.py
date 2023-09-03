@@ -29,9 +29,6 @@ def openFiles():
 
 def cleanFiles():
     global cleanedFile
-    # Get the directory of the selected files:
-    directory = filepaths[0].rsplit("/", 1)
-    print(directory[0])
 
     for filepath in filepaths:
         try:
@@ -43,6 +40,9 @@ def cleanFiles():
             cleanedFile = "Hello World"
         except:
             sys.exit()
+
+    # Get the directory of the selected files:
+    directory = filepaths[0].rsplit("/", 1)
 
     clean_filename = directory[0]+"/cleanfile.txt"
     print(clean_filename)
