@@ -1,11 +1,49 @@
 import csv
 import os
+import threading
+import time
 
 import numpy as np
 import pandas as pd
 
 
-class ProcessData():
+class SheepData():
+    def process(self, sheep_data):
+        print("------ Processing Sheep ------", sheep_data)
+        start_time = time.time()
+        folder_path = os.path.join("test_data", sheep_data)  # Use the sheep_data folder name
+        print(folder_path)
+        read_time = time.time()
+        print("Reading file in progress")
+        combined_data = self.read_data(folder_path)
+        read_end_time = time.time()
+        print("Completed file read")
+
+        print("Cleaning data in progress")
+        start_clean_time = time.time()
+        cleaned_data = self.clean_data(combined_data)
+        end_clean_time = time.time()
+        print("Completed data cleaning")
+
+        print("Writing to CSV in progress")
+        start_write_time = time.time()
+        self.save_to_csv(cleaned_data, os.path.join("test_data", f"ACCEL_{sheep_data}.csv"))
+        end_write_time = time.time()
+        print("Completed writing")
+
+        end_time = time.time()
+
+        total_read_time = read_end_time - read_time
+        total_clean_time = end_clean_time - start_clean_time
+        total_write_time = end_write_time - start_write_time
+        elapsed_time = end_time - start_time
+
+        print(f"Read time: {total_read_time} seconds")
+        print(f"Clean time: {total_clean_time} seconds")
+        print(f"Write time: {total_write_time} seconds")
+        print(f"Total Elapsed time: {elapsed_time} seconds")
+        print("--------- Sheep Completed ---------")
+
     def read_data(self, folder_path):
         dfs = []
         file_names = sorted(os.listdir(folder_path))
