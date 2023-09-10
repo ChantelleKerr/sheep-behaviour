@@ -1,6 +1,7 @@
 import time
 from tkinter import filedialog
 from tkinter import ttk
+from tkinter import messagebox
 from tkinter import *
 import sys
 
@@ -15,8 +16,8 @@ def getFolder():
     if not folder_path:
         return
 
-    label = Label(second_frame, text="Successfully loaded: " + folder_path, font=("Helvetica", 18)) 
-    label.grid(row=0, column=0, sticky="ew")
+    load_label = Label(second_frame, text="Successfully loaded: " + folder_path, font=("Helvetica", 18)) 
+    load_label.grid(row=0, column=0, sticky="ew")
     clean_file_button["state"] = NORMAL
 
 def cleanFiles(read_pb, clean_pb, write_pb, window):
@@ -33,6 +34,10 @@ def cleanFiles(read_pb, clean_pb, write_pb, window):
     print("Writing to CSV in progress")
     process_data.start_save_to_csv(cleaned_data, folder_path+"/cleaned.csv", write_pb, window)
     print("Completed writing")
+
+    messagebox.showinfo("Success", "Successfully cleaned data")
+
+
 
 
 ## Application starting point
