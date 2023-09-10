@@ -8,13 +8,20 @@ import sys
 from data_cleaning.data_clean import ProcessData
 
 folder_path = None
+sheep_name = None
 
 #Get ("Load") folder with sheep files in it
 def getFolder():
     global folder_path
+    global sheep_name
+    
     folder_path = filedialog.askdirectory()
     if not folder_path:
         return
+
+    #Get sheep name for clean file name
+    folder_path_list = folder_path.rsplit("/", 1)
+    sheep_name = folder_path_list[1]
 
     load_label = Label(second_frame, text="Successfully loaded: " + folder_path, font=("Helvetica", 18)) 
     load_label.grid(row=0, column=0, sticky="ew")
@@ -32,13 +39,10 @@ def cleanFiles(read_pb, clean_pb, write_pb, window):
     print("Completed data cleaning")
 
     print("Writing to CSV in progress")
-    process_data.start_save_to_csv(cleaned_data, folder_path+"/cleaned.csv", write_pb, window)
+    process_data.start_save_to_csv(cleaned_data, folder_path+"/"+sheep_name+".csv", write_pb, window)
     print("Completed writing")
 
     messagebox.showinfo("Success", "Successfully cleaned data")
-
-
-
 
 ## Application starting point
 ## Run python3 main.py or python main.py
