@@ -1,0 +1,69 @@
+from data_cleaning.data_clean import ProcessData
+import unittest
+import os
+import pandas as pd
+from io import StringIO
+
+
+class TestProcessData(unittest.TestCase):
+    def test_ProcessData_read_data(self):
+        test_folder = 'test_data_folder'
+        os.makedirs(test_folder, exist_ok=True)
+
+        lines1 = ['ACCEL_X,ACCEL_Y,ACCEL_Z,LAT,LON,DAY,MONTH,YEAR,HOUR,MINUTE,SECOND',
+                  '*0,0,333,-32.034950,115.796829,11.0,2.0,2023.0,3.0,6.0,19.0',
+                  '-2048,-2048,-2048',
+                  '-175,300,500',
+                  '-185,301,600']
+        lines2 = ['*0,0,333',
+                  '-175,300,500',
+                  '-185,301,600',
+                  '*0,0,333',
+                  '-175,300,500',
+                  '-185,301,600']
+        for i in range(3):
+            output_file = test_folder + '/file' + '{:03d}'.format(i) + '.txt'
+            if i == 0:
+                lines = lines1
+            else:
+                lines = lines2
+            content = '\n'.join(lines)
+            with open(output_file, 'w') as file:
+                file.write(content)
+
+        process_data = ProcessData()
+
+        # call the function under test
+        result_df = process_data.read_data(test_folder)
+
+        # Verify that the results are consistent with expectations
+        expected_data = lines1 + lines2 * 2
+        expected_data = pd.read_csv(StringIO('\n'.join(expected_data)))
+        pd.testing.assert_frame_equal(result_df, expected_data)
+        print('expected_data.read_data is well!')
+
+        pd.testing.assert_frame_equal(result_df, expected_data)
+        result_df = process_data.clean_data(result_df)
+        result_df = result_df.reset_index(drop=True)
+        expected_data = ['ACCEL_X,ACCEL_Y,ACCEL_Z,DATE'] + ['-175,300,500', '-185,301,600'] * 5
+        expected_data = pd.read_csv(StringIO('\n'.join(expected_data)))
+        expected_data.iloc[0, 3] = pd.to_datetime('11 2 2023 3 40 28', format='%d %m %Y %H %M %S')
+        expected_data.iloc[:, :1] = expected_data.iloc[:, :1].astype(str)
+        expected_data = expected_data.where(pd.notna(expected_data), None)
+        pd.testing.assert_frame_equal(result_df, expected_data)
+        print('expected_data.clean_data is well!')
+
+        data = {'A': [1, 2, 3], 'B': [4, 5, 6]}
+        df = pd.DataFrame(data)
+        file_path = "test_output.txt"
+        process_data.save_to_csv(df, file_path)
+        self.assertTrue(os.path.exists(file_path))
+        df_read = pd.read_csv(file_path)
+        pd.testing.assert_frame_equal(df, df_read)
+        os.remove(file_path)
+        print('expected_data.save_to_csv is well!')
+        # shutil.rmtree(test_folder)
+
+
+if __name__ == '__main__':
+    unittest.main()
