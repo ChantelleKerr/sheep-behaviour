@@ -1,42 +1,67 @@
 import time
+from tkinter import filedialog
+from tkinter import ttk
+from tkinter import *
+import sys
 
 from data_cleaning.data_clean import ProcessData
+
+folder_path = None
+combined_data = None
+cleaned_data = None
+
+def getFolder():
+    global folder_path
+    folder_path = filedialog.askdirectory()
+    if not folder_path:
+        return
+
+    label = Label(second_frame, text="Successfully loaded: " + folder_path, font=("Helvetica", 18)) 
+    label.grid(row=0, column=0, sticky="ew")
+    clean_file_button["state"] = NORMAL
+
+def cleanFiles(progressbar, progressbar2, progressbar3, window):
+    process_data = ProcessData()
+    global combined_data
+    global cleaned_data
+
+
+    combined_data = process_data.read_data(folder_path, progressbar, window)
+    print("Cleaning data in progress")
+    cleaned_data = process_data.start_clean_data(process_data.clean_data, progressbar2, window, combined_data)
+    print("Completed data cleaning")
+
+    print("Writing to CSV in progress")
+    process_data.start_save_to_csv(process_data.save_to_csv, cleaned_data, folder_path+"/cleaned.csv", progressbar3, window)
+    print("Completed writing")
+
 
 ## Application starting point
 ## Run python3 main.py or python main.py
 if __name__ == "__main__":
-    start_time = time.time()
-    
-    process_data = ProcessData()
-    folder_path = "test_data/sheep1"  # hardcoded data path
-    
-    read_time = time.time()
-    print("Reading file in progress")
-    combined_data = process_data.read_data(folder_path)
-    read_end_time = time.time()
-    print("Completed file read")
-   
-    print("Cleaning data in progress")
-    start_clean_time = time.time()
-    cleaned_data = process_data.clean_data(combined_data)
-    end_clean_time = time.time()
-    print("Completed data cleaning")
-    
-    print("Writing to CSV in progress")
-    start_write_time = time.time()
-    process_data.save_to_csv(cleaned_data, "test_data/sheep1/cleaned.csv")
-    end_write_time = time.time()
-    print("Completed writing")
 
+    window = Tk()
 
-    end_time = time.time()
-    
-    total_read_time = read_end_time - read_time
-    total_clean_time = end_clean_time - start_clean_time 
-    total_write_time = end_write_time - start_write_time
-    elapsed_time = end_time - start_time
+    window.title("Sheep Behaviour Analysis")
+    window.rowconfigure(0, minsize=800, weight=1)
+    window.columnconfigure(1,minsize=800, weight=1)
 
-    print(f"Read time: {total_read_time} seconds")
-    print(f"Clean time: {total_clean_time} seconds")
-    print(f"Write time: {total_write_time} seconds")
-    print(f"Total Elapsed time: {elapsed_time} seconds")
+    menu_frame = Frame(window, relief=RAISED, bd=2, bg="gray98")
+    menu_frame.grid(row=0, column=0, sticky="ns")
+
+    second_frame = Frame(window)
+    second_frame.grid(row=0,column=1)
+
+    progressbar = ttk.Progressbar(window)
+    progressbar2 = ttk.Progressbar(window, mode="indeterminate")
+    progressbar3 = ttk.Progressbar(window, mode="indeterminate")
+
+    load_file_button = Button(menu_frame, text='Load Files', command=getFolder) 
+    load_file_button.grid(row=0, column=0, sticky="ew",padx=(5), pady=(5))
+
+    clean_file_button = Button(menu_frame, text='Clean Files', state=DISABLED, command = lambda: cleanFiles(progressbar, progressbar2, progressbar3, window))
+
+    clean_file_button.grid(row=1, column=0, sticky="ew", padx=(10))
+
+    window.mainloop()
+
