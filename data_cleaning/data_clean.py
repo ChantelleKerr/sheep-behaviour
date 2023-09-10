@@ -10,9 +10,8 @@ from tkinter import *
 import numpy as np
 import pandas as pd
 
-
 class ProcessData():
-    def read_data(self, folder_path, progressbar, window):
+    def read_data(self, folder_path, read_pb, window):
         dfs = []
         file_names = sorted(os.listdir(folder_path))
         header = None
@@ -20,6 +19,7 @@ class ProcessData():
         num_files = 0
         counter = 0
 
+        #Get number of files (only .txt)
         for file in file_names:
             if file.endswith('.txt'):
                 num_files+=1
@@ -28,7 +28,7 @@ class ProcessData():
 
         label = Label(window, text="Reading: ", font=("Helvetica", 18)) 
         label.place(x=200, y=50)
-        progressbar.place(x=200, y=100, width=200)
+        read_pb.place(x=200, y=100, width=200)
 
         for file in file_names:
             if file.endswith('.txt'):
@@ -37,10 +37,10 @@ class ProcessData():
                 counter += 1
 
                 if (counter < num_files):
-                    progressbar['value'] += increment
+                    read_pb['value'] += increment
                     window.update()
                 else:
-                    progressbar['value'] = 99.9
+                    read_pb['value'] = 99.9 #if pb goes to 100 it resets?
                     window.update()
 
                 if header is None:
@@ -50,7 +50,7 @@ class ProcessData():
                     df = pd.read_csv(file_path, header=None, names=header)
                 dfs.append(df)
 
-        progressbar.place_forget()  
+        read_pb.place_forget()  
         label.place_forget()
         combined_df = pd.concat(dfs, ignore_index=True)
         return combined_df
@@ -77,7 +77,6 @@ class ProcessData():
         
         df = df.drop(columns=['LAT', 'LON', 'DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND'])
         
-        
         mask = np.logical_and([s.startswith('*') for s in df['ACCEL_X']], df.index % 1560 == 0)
 
         # Calculates how many minutes since the initial date (based on the mask)
@@ -103,20 +102,19 @@ class ProcessData():
 
         combined_mask = mask | mask2 | mask3
         df = df[~combined_mask]
-
         df_queue.put(df)
 
-    def start_clean_data(self, clean_data, progressbar2, window, df):
+    def start_clean_data(self, clean_pb, window, df):
         df_queue = queue.Queue()
 
         label = Label(window, text="", font=("Helvetica", 18)) 
         label = Label(window, text="Cleaning: ", font=("Helvetica", 18)) 
         label.place(x=200, y=50)        
-        progressbar2.place(x=200, y=100, width=200)
+        clean_pb.place(x=200, y=100, width=200)
 
-        progressbar2.start()
+        clean_pb.start()
 
-        thread = threading.Thread(target=clean_data, args=(df, df_queue))
+        thread = threading.Thread(target=ProcessData.clean_data, args=(self, df, df_queue))
         thread.start()
 
         while thread.is_alive():
@@ -125,7 +123,7 @@ class ProcessData():
         result_from_thread = df_queue.get()
 
         time.sleep(0.5)
-        progressbar2.destroy()
+        clean_pb.destroy()
         label.destroy()
 
         return result_from_thread
@@ -133,23 +131,23 @@ class ProcessData():
     def save_to_csv(self, df, file_name):
         df.to_csv(file_name, index=False)
 
-    def start_save_to_csv(self, save_to_csv, cleaned_data, path, progressbar3, window):
+    def start_save_to_csv(self, cleaned_data, path, write_pb, window):
 
         label = Label(window, text="", font=("Helvetica", 18)) 
         label = Label(window, text="Writing to CSV: ", font=("Helvetica", 18)) 
         label.place(x=200, y=50)        
-        progressbar3.place(x=200, y=100, width=200)
+        write_pb.place(x=200, y=100, width=200)
 
-        progressbar3.start()
+        write_pb.start()
 
-        thread = threading.Thread(target=save_to_csv, args=(cleaned_data, path))
+        thread = threading.Thread(target=ProcessData.save_to_csv, args=(self, cleaned_data, path))
         thread.start()
 
         while thread.is_alive():
             window.update()
 
         time.sleep(0.5)
-        progressbar3.destroy()
+        write_pb.destroy()
         label.destroy()
 
 
