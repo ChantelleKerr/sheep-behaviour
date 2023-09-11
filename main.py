@@ -1,10 +1,8 @@
-import time
 from tkinter import filedialog
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter import *
-import sys
-import os
+import os, sys, time, webbrowser
 
 from data_cleaning.data_clean import ProcessData
 
@@ -59,7 +57,10 @@ def cleanFiles(read_pb, clean_pb, write_pb, window):
     process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", write_pb, window)
     print("Completed writing")
 
-    messagebox.showinfo("Success", "Successfully cleaned data")
+    print(clean_data_folder)
+
+    messagebox.showinfo("Success", "Successfully cleaned selected data files")
+    webbrowser.open('file:///'+clean_data_folder)
 
 ## Application starting point
 ## Run python3 main.py or python main.py
