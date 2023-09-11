@@ -78,14 +78,18 @@ if __name__ == "__main__":
     second_frame = Frame(window)
     second_frame.grid(row=0,column=1)
 
+    s = ttk.Style()
+    s.theme_use("default")
+    s.configure("TProgressbar", thickness=10)
+
     #Progress Bars
-    read_pb = ttk.Progressbar(window)
-    clean_pb = ttk.Progressbar(window, mode="indeterminate")
-    write_pb = ttk.Progressbar(window, mode="indeterminate")
+    read_pb = ttk.Progressbar(window, style="TProgressbar")
+    clean_pb = ttk.Progressbar(window, mode="indeterminate", style="TProgressbar")
+    write_pb = ttk.Progressbar(window, mode="indeterminate", style="TProgressbar")
 
     #Buttons
     load_file_button = Button(menu_frame, text='Load Files', command=getFolder) 
-    load_file_button.grid(row=0, column=0, sticky="ew",padx=(5), pady=(5))
+    load_file_button.grid(row=0, column=0, sticky="ew",padx=(10), pady=(5))
 
     clean_file_button = Button(menu_frame, text='Clean Files', state=DISABLED, command = lambda: cleanFiles(read_pb, clean_pb, write_pb, window))
     clean_file_button.grid(row=1, column=0, sticky="ew", padx=(10))

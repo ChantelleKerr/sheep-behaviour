@@ -26,9 +26,9 @@ class ProcessData():
 
         increment = 100/num_files
 
-        label = Label(window, text="Reading: ", font=("Helvetica", 18)) 
-        label.place(x=200, y=50)
-        read_pb.place(x=200, y=100, width=200)
+        label = Label(window, text="Reading: ", font=("Helvetica", 16)) 
+        label.place(x=120, y=10)
+        read_pb.place(x=120, y=40, width=200)
 
         for file in file_names:
             if file.endswith('.txt'):
@@ -107,10 +107,9 @@ class ProcessData():
     def start_clean_data(self, clean_pb, window, df):
         df_queue = queue.Queue()
 
-        label = Label(window, text="", font=("Helvetica", 18)) 
-        label = Label(window, text="Cleaning: ", font=("Helvetica", 18)) 
-        label.place(x=200, y=50)        
-        clean_pb.place(x=200, y=100, width=200)
+        label = Label(window, text="Cleaning: ", font=("Helvetica", 16)) 
+        label.place(x=120, y=10)        
+        clean_pb.place(x=120, y=40, width=200)
 
         clean_pb.start()
 
@@ -133,10 +132,9 @@ class ProcessData():
 
     def start_save_to_csv(self, cleaned_data, path, write_pb, window):
 
-        label = Label(window, text="", font=("Helvetica", 18)) 
-        label = Label(window, text="Writing to CSV: ", font=("Helvetica", 18)) 
-        label.place(x=200, y=50)        
-        write_pb.place(x=200, y=100, width=200)
+        label = Label(window, text="Writing to CSV: ", font=("Helvetica", 16)) 
+        label.place(x=120, y=10)        
+        write_pb.place(x=120, y=40, width=200)
 
         write_pb.start()
 
