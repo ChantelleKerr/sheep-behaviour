@@ -4,15 +4,18 @@ from tkinter import ttk
 from tkinter import messagebox
 from tkinter import *
 import sys
+import os
 
 from data_cleaning.data_clean import ProcessData
 
 folder_path = None
+path_to_folder = None
 sheep_name = None
 
 #Get ("Load") folder with sheep files in it
 def getFolder():
     global folder_path
+    global path_to_folder
     global sheep_name
     
     folder_path = filedialog.askdirectory()
@@ -21,7 +24,17 @@ def getFolder():
 
     #Get sheep name for clean file name
     folder_path_list = folder_path.rsplit("/", 1)
+    path_to_folder = folder_path_list[0]
     sheep_name = folder_path_list[1]
+
+    # Get a list of files in the selected folder
+    files_in_folder = os.listdir(folder_path)
+
+    # Check if there is only one file in the folder. Throw Error box if True.
+    if len(files_in_folder) <= 1:
+        messagebox.showerror("Error", "Please select a folder containing more than one data file.")
+        clean_file_button["state"] = DISABLED
+        return
 
     load_label = Label(second_frame, text="Successfully loaded: " + folder_path, font=("Helvetica", 18)) 
     load_label.grid(row=0, column=0, sticky="ew")
@@ -38,8 +51,13 @@ def cleanFiles(read_pb, clean_pb, write_pb, window):
     cleaned_data = process_data.start_clean_data(clean_pb, window, combined_data)
     print("Completed data cleaning")
 
+    clean_data_folder = path_to_folder+"/cleaned_data"
+
+    if os.path.isdir(clean_data_folder) == False:
+        os.mkdir(clean_data_folder)
+
     print("Writing to CSV in progress")
-    process_data.start_save_to_csv(cleaned_data, folder_path+"/"+sheep_name+".csv", write_pb, window)
+    process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", write_pb, window)
     print("Completed writing")
 
     messagebox.showinfo("Success", "Successfully cleaned data")
