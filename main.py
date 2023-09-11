@@ -33,7 +33,6 @@ def getFolder():
     # Check if there is only one file in the folder. Throw Error box if True.
     if len(files_in_folder) <= 1:
         messagebox.showerror("Error", "Please select a folder containing more than one data file.")
-        clean_file_button["state"] = DISABLED
         return
 
     load_label = Label(second_frame, text="Successfully loaded: " + folder_path, font=("Helvetica", 18)) 
