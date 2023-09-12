@@ -64,7 +64,7 @@ class TestProcessData(unittest.TestCase):
 
         data = {'A': [1, 2, 3], 'B': [4, 5, 6]}
         df = pd.DataFrame(data)
-        file_path = "test_output.txt"
+        file_path = "test_output.csv"
         process_data.save_to_csv(df, file_path)
         try:
             self.assertTrue(os.path.exists(file_path))
