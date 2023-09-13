@@ -72,9 +72,12 @@ class ProcessData():
         seconds_at_first_valid_date = df.iloc[index_of_first_valid_row + 1]['ACCEL_X']
         seconds_at_first_valid_date = int(seconds_at_first_valid_date.replace('*', ''))
 
-        # Calculate the initial start date
+        # Calculate the initial start date.
         initial_datetime = datetime_obj - pd.Timedelta(seconds=seconds_at_first_valid_date-1) # Minus 1 because this is the next second (we want the previous so it matches the date above)
-        
+
+        # Convert from GMT to GMT+8. (AWST)
+        initial_datetime =  initial_datetime + pd.Timedelta(hours=8)
+
         df = df.drop(columns=['LAT', 'LON', 'DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND'])
         
         mask = np.logical_and([s.startswith('*') for s in df['ACCEL_X']], df.index % 1560 == 0)
@@ -87,6 +90,8 @@ class ProcessData():
         df['DATE'] = None
         df.loc[mask, 'DATE'] = initial_datetime + pd.to_timedelta(seconds_to_add[mask], unit='s')
         df['DATE'] = df['DATE'].shift(1)
+
+        
 
         # Remove -2048,-2048,-2048 and shift the date one index before removing
         mask = (df['ACCEL_X'] == '-2048') & (df['ACCEL_Y'] == -2048) & (df['ACCEL_Z'] == -2048)
@@ -102,6 +107,7 @@ class ProcessData():
 
         combined_mask = mask | mask2 | mask3
         df = df[~combined_mask]
+
         df_queue.put(df)
 
     def start_clean_data(self, clean_pb, window, df):
