@@ -21,6 +21,7 @@ class TestProcessData(unittest.TestCase):
         lines2 = ['*0,0,333',
                   '-175,300,500',
                   '-185,301,600',
+                  '0,0,0',
                   '*0,0,333',
                   '-175,300,500',
                   '-185,301,600']
@@ -96,13 +97,7 @@ class TestProcessData(unittest.TestCase):
         except AssertionError:
             print('data_clean.process is wrong! There is no csv file!')
 
-        # data = pd.read_csv("./test_data/ACCEL_sheepone.csv")
-        # expected_data.iloc[:, :1] = expected_data.iloc[:, :1].astype(np.int64)
-        # expected_data.iloc[0,3] = str(expected_data.iloc[0,3])
-        # pd.testing.assert_frame_equal(data, expected_data)
-        # shutil.rmtree(test_folder)
-        # os.remove('test_data/ACCEL_sheepone.csv')
-        # print('data_clean.process is well!')
+
 
 
 
