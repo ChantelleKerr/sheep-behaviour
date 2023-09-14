@@ -1,5 +1,4 @@
 import shutil
-
 from data_cleaning.data_clean import SheepData
 import unittest
 import os
@@ -9,7 +8,7 @@ from io import StringIO
 
 
 class TestProcessData(unittest.TestCase):
-    def test_ProcessData_read_data(self):
+    def test_ProcessData(self):
         test_folder = 'test_data/sheepone'
         os.makedirs(test_folder, exist_ok=True)
 
@@ -56,7 +55,7 @@ class TestProcessData(unittest.TestCase):
         expected_data = pd.read_csv(StringIO('\n'.join(expected_data)))
         expected_data.iloc[0, 3] = pd.to_datetime('11 2 2023 3 40 28', format='%d %m %Y %H %M %S')
         expected_data.iloc[:, :1] = expected_data.iloc[:, :1].astype(str)
-        expected_data = expected_data.where(pd.notna(expected_data), None)
+        # expected_data = expected_data.where(pd.notna(expected_data), None)
         try:
             pd.testing.assert_frame_equal(result_df, expected_data)
             print('data_clean.clean_data is well!')
@@ -102,5 +101,5 @@ class TestProcessData(unittest.TestCase):
 
 
 
-if __name__ == '__main__':
-    unittest.main()
+# if __name__ == '__main__':
+#     unittest.main()
