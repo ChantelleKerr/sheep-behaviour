@@ -1,8 +1,9 @@
-from tkinter import filedialog
-from tkinter import ttk
-from tkinter import messagebox
+import os
+import sys
+import time
+import webbrowser
 from tkinter import *
-import os, sys, time, webbrowser
+from tkinter import filedialog, messagebox, ttk
 
 from data_cleaning.data_clean import ProcessData
 
@@ -46,6 +47,8 @@ def cleanFiles(read_pb, clean_pb, write_pb, window):
 
     print("Cleaning data in progress")
     cleaned_data = process_data.start_clean_data(clean_pb, window, combined_data)
+    # print(cleaned_data)
+    # combined_data = [] # free memory
     print("Completed data cleaning")
 
     clean_data_folder = path_to_folder+"/cleaned_data"
