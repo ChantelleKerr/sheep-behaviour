@@ -83,12 +83,10 @@ class ProcessData():
         seconds_to_add = np.zeros(len(df))
         seconds_to_add[mask] = np.arange(0, mask.sum()) * 60
 
-        print("RAWR")
         # Calculates a new date from the initial date for every minute
         df['DATE'] = None
         df.loc[mask, 'DATE'] = datetime_obj + pd.to_timedelta(seconds_to_add[mask], unit='s')
         df['DATE'] = df['DATE'].shift(1)
-        print("HELLO")
 
         # Remove -2048,-2048,-2048 and shift the date one index before removing
         mask = (df['ACCEL_X'] == '-2048') & (df['ACCEL_Y'] == -2048) & (df['ACCEL_Z'] == -2048)
