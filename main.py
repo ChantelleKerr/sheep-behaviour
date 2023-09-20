@@ -1,8 +1,9 @@
-from tkinter import filedialog
-from tkinter import ttk
-from tkinter import messagebox
+import os
+import sys
+import time
+import webbrowser
 from tkinter import *
-import os, sys, time, webbrowser
+from tkinter import filedialog, messagebox, ttk
 
 from data_cleaning.data_clean import ProcessData
 
@@ -39,13 +40,12 @@ def getFolder():
 
 def cleanFiles(read_pb, clean_pb, write_pb, window):
     process_data = ProcessData()
-    global combined_data
-    global cleaned_data
 
     combined_data = process_data.read_data(folder_path, read_pb, window)
 
     print("Cleaning data in progress")
     cleaned_data = process_data.start_clean_data(clean_pb, window, combined_data)
+    combined_data = [] # free memory
     print("Completed data cleaning")
 
     clean_data_folder = path_to_folder+"/cleaned_data"
@@ -56,6 +56,7 @@ def cleanFiles(read_pb, clean_pb, write_pb, window):
     print("Writing to CSV in progress")
     process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", write_pb, window)
     print("Completed writing")
+    cleaned_data = [] # Free memory
 
     print(clean_data_folder)
 

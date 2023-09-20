@@ -1,46 +1,43 @@
 import csv
 import os
-import time
-import threading
 import queue
-
-from tkinter import ttk
+import threading
+import time
 from tkinter import *
+from tkinter import ttk
 
 import numpy as np
 import pandas as pd
+
 
 class ProcessData():
     def read_data(self, folder_path, read_pb, window):
         dfs = []
         file_names = sorted(os.listdir(folder_path))
+
         header = None
+        found_day_15 = False
+        day_counter = 0
+        MAX_EXPERIMENT_DAYS = 34
 
-        num_files = 0
-        counter = 0
-
-        #Get number of files (only .txt)
-        for file in file_names:
-            if file.endswith('.txt'):
-                num_files+=1
-
-        increment = 100/num_files
-
+        num_files = len(file_names)
+        increment = 100 / num_files
+        
         label = Label(window, text="Reading: ", font=("Helvetica", 16)) 
         label.place(x=120, y=10)
         read_pb.place(x=120, y=40, width=200)
 
-        for file in file_names:
+        for idx, file in enumerate(file_names):
+            # We only want to process 34 days worth of files
+            if day_counter >= MAX_EXPERIMENT_DAYS:
+                    break
+            
             if file.endswith('.txt'):
                 print(f'Processing: {file}')
                 file_path = os.path.join(folder_path, file)
-                counter += 1
 
-                if (counter < num_files):
+                if (idx < MAX_EXPERIMENT_DAYS):
                     read_pb['value'] += increment
-                    window.update()
-                else:
-                    read_pb['value'] = 99.9 #if pb goes to 100 it resets?
                     window.update()
 
                 if header is None:
@@ -48,50 +45,48 @@ class ProcessData():
                     header = df.columns.tolist()
                 else:
                     df = pd.read_csv(file_path, header=None, names=header)
-                dfs.append(df)
+                
+                rows_with_day_15 = df[df['DAY'] == 15]
+
+                if len(rows_with_day_15) > 0:
+                    found_day_15 = True
+                
+                if found_day_15:
+                    dfs.append(df)
+                    day_counter += 1
 
         read_pb.place_forget()  
         label.place_forget()
         combined_df = pd.concat(dfs, ignore_index=True)
         return combined_df
     
+
     def clean_data(self, df, df_queue):
 
-        # Find the first row with no NaN values (This is where the first date and time is recorded)
-        first_valid_row = df.dropna().iloc[0]
+        first_index_of_day_15 = df[df['DAY'] == 15].index.min()
+        # Remove all rows before that index and reset the index
+        df = df.iloc[first_index_of_day_15:].reset_index(drop=True)
 
         # Extract the date values and format it for calculations
         columns_to_extract = ['DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND']
-        values_of_first_valid_row = first_valid_row[columns_to_extract].astype(int).values
+        values_of_first_valid_row = df.loc[0, columns_to_extract].astype(int).values
         datetime_format = '%d %m %Y %H %M %S'
         datetime_str = ' '.join(map(str, values_of_first_valid_row))
-        datetime_obj = pd.to_datetime(datetime_str, format=datetime_format)
- 
-        # Find the current overall second at the date and time above
-        index_of_first_valid_row = first_valid_row.name
-        seconds_at_first_valid_date = df.iloc[index_of_first_valid_row + 1]['ACCEL_X']
-        seconds_at_first_valid_date = int(seconds_at_first_valid_date.replace('*', ''))
-
-        # Calculate the initial start date.
-        initial_datetime = datetime_obj - pd.Timedelta(seconds=seconds_at_first_valid_date-1) # Minus 1 because this is the next second (we want the previous so it matches the date above)
-
-        # Convert from GMT to GMT+8. (AWST)
-        initial_datetime =  initial_datetime + pd.Timedelta(hours=8)
+        datetime_obj = pd.to_datetime(datetime_str, format=datetime_format) + pd.Timedelta(hours=8) # Convert from GMT to GMT+8. (AWST)
+        df = df.drop(index=0).reset_index(drop=True)
 
         df = df.drop(columns=['LAT', 'LON', 'DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND'])
         
         mask = np.logical_and([s.startswith('*') for s in df['ACCEL_X']], df.index % 1560 == 0)
 
-        # Calculates how many minutes since the initial date (based on the mask)
+        # # Calculates how many minutes since the initial date (based on the mask)
         seconds_to_add = np.zeros(len(df))
         seconds_to_add[mask] = np.arange(0, mask.sum()) * 60
 
         # Calculates a new date from the initial date for every minute
         df['DATE'] = None
-        df.loc[mask, 'DATE'] = initial_datetime + pd.to_timedelta(seconds_to_add[mask], unit='s')
+        df.loc[mask, 'DATE'] = datetime_obj + pd.to_timedelta(seconds_to_add[mask], unit='s')
         df['DATE'] = df['DATE'].shift(1)
-
-        
 
         # Remove -2048,-2048,-2048 and shift the date one index before removing
         mask = (df['ACCEL_X'] == '-2048') & (df['ACCEL_Y'] == -2048) & (df['ACCEL_Z'] == -2048)
@@ -109,6 +104,7 @@ class ProcessData():
         df = df[~combined_mask]
 
         df_queue.put(df)
+
 
     def start_clean_data(self, clean_pb, window, df):
         df_queue = queue.Queue()
@@ -133,8 +129,11 @@ class ProcessData():
 
         return result_from_thread
 
+
     def save_to_csv(self, df, file_name):
         df.to_csv(file_name, index=False)
+
+
 
     def start_save_to_csv(self, cleaned_data, path, write_pb, window):
 
