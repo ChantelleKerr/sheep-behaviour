@@ -9,7 +9,6 @@ from tkinter import ttk
 import numpy as np
 import pandas as pd
 
-
 class ProcessData():
     def read_data(self, folder_path, read_pb, window):
         dfs = []

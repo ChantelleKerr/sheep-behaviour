@@ -10,10 +10,16 @@ from PIL import Image, ImageTk
 
 from data_cleaning.data_clean import ProcessData
 
+#Global variables
 folder_path = None
 path_to_folder = None
 sheep_name = None
 
+def getFolders():
+    print("get folders here")
+
+def cleanFiles(root):
+    print("Data cleaning stuff in here")
 
 def sb1_changed(): # first spinbox
     print("For start hours spinbox")
@@ -47,8 +53,9 @@ if __name__ == "__main__":
 
     #Data Processing
     Label(menu_frame,  text="Data Processing", bg='#27348b', fg='white', font="Arial 16").grid(row=0, column=0, padx=25, pady=10)
-    load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 14 bold", background='#e2b600', activebackground='#e2b600', focuscolor='', borderless=True, padx=5, pady=15).grid(row=1, column=0, rowspan=2)
-    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 14 bold", background='#3e8638', activebackground='#3e8638', focuscolor='', borderless=True, padx=0, pady=15).grid(row=3, rowspan=2, column=0)
+    load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 14 bold", background='#e2b600', activebackground='#e2b600', focuscolor='', borderless=True, padx=5, pady=15, command=getFolders).grid(row=1, column=0, rowspan=2)
+    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 14 bold", background='#3e8638', activebackground='#3e8638', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: cleanFiles(root))
+    clean_files_button.grid(row=3, rowspan=2, column=0)
     
     #For the separation line
     canvas = Canvas(menu_frame, width=170, height=30, background='#27348b', highlightthickness=0, relief='ridge')
@@ -108,7 +115,7 @@ if __name__ == "__main__":
     root.mainloop()
 
 
-#     Get ("Load") folder with sheep files in it
+# Get ("Load") folder with sheep files in it
 # def getFolder():
 #     global folder_path
 #     global path_to_folder
@@ -159,7 +166,6 @@ if __name__ == "__main__":
 
 #     messagebox.showinfo("Success", "Successfully cleaned selected data files")
 #     webbrowser.open('file:///'+clean_data_folder)
-
 
     # window = Tk()
 
