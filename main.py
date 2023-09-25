@@ -47,8 +47,10 @@ if __name__ == "__main__":
 
     #Data Processing
     Label(menu_frame,  text="Data Processing", bg='#27348b', fg='white', font="Arial 16").grid(row=0, column=0, padx=25, pady=10)
-    Button(menu_frame, text="LOAD DIRECTORY", font="Arial 14 bold", background='#e2b600', activebackground='#e2b600', focuscolor='', borderless=True, padx=5, pady=15).grid(row=1, column=0, rowspan=2)
-    Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 14 bold", background='#3e8638', activebackground='#3e8638', focuscolor='', borderless=True, padx=0, pady=15).grid(row=3, rowspan=2, column=0)
+    load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 14 bold", background='#e2b600', activebackground='#e2b600', focuscolor='', borderless=True, padx=5, pady=15).grid(row=1, column=0, rowspan=2)
+    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 14 bold", background='#3e8638', activebackground='#3e8638', focuscolor='', borderless=True, padx=0, pady=15).grid(row=3, rowspan=2, column=0)
+    
+    #For the separation line
     canvas = Canvas(menu_frame, width=170, height=30, background='#27348b', highlightthickness=0, relief='ridge')
     canvas.create_line(5, 25, 165, 25, width=0, fill='white')
     canvas.grid(row=5, column=0)
@@ -57,7 +59,7 @@ if __name__ == "__main__":
     Label(menu_frame,  text="Data Analysis", bg='#27348b', fg='white', font="Arial 16").grid(row=6, column=0, padx=25, pady=5)
     
     Label(menu_frame,  text="Start Date", bg='#27348b', justify="left", anchor="w", fg='white', font="Arial 12").grid(sticky = W, row=7, column=0, padx=10, pady=0)
-    date_entry = DateEntry(menu_frame, background='#27348b', selectmode='day')
+    start_date = date_entry = DateEntry(menu_frame, background='#27348b', selectmode='day')
     date_entry._top_cal.overrideredirect(False)
     date_entry.grid(row=8, column=0)
 
@@ -65,36 +67,37 @@ if __name__ == "__main__":
     Label(menu_frame,  text="Minutes", bg='#27348b', fg='white', font="Arial 12").grid(sticky = E, row=9, column=0, padx=0, pady=2)
     Label(menu_frame,  text='', bg='#27348b', fg='white', font="Arial 12").grid(sticky = E, row=10, column=0, padx=0, pady=3) #filler label
     
-    
-    sb1 = Spinbox(menu_frame, text='b1', width=5, from_=00, to=24, command=sb1_changed)
+    start_hours = Spinbox(menu_frame, text='b1', width=5, from_=00, to=24, command=sb1_changed)
     colon1 = Label(menu_frame,  text=":", bg='#27348b', fg='white', font="Arial 12")
-    sb2 = Spinbox(menu_frame, text='b2', width=5, from_=00, to=59, command=sb2_changed)
-    sb1.place(x=15, y=275)
+    start_minutes = Spinbox(menu_frame, text='b2', width=5, from_=00, to=59, command=sb2_changed)
+    start_hours.place(x=15, y=275)
     colon1.place(x=85, y=275)
-    sb2.place(x=98, y=275)
+    start_minutes.place(x=98, y=275)
 
     Label(menu_frame,  text="End Date", bg='#27348b', justify="left", anchor="w", fg='white', font="Arial 12").grid(sticky = W, row=11, column=0, padx=10, pady=0)
-    date_entry = DateEntry(menu_frame, background='#27348b', selectmode='day')
+    end_date = date_entry = DateEntry(menu_frame, background='#27348b', selectmode='day')
     date_entry._top_cal.overrideredirect(False)
     date_entry.grid(row=12, column=0)
 
     Label(menu_frame,  text="Hour", bg='#27348b', fg='white', font="Arial 12").grid(sticky = W, row=13, column=0, padx=0, pady=2)
     Label(menu_frame,  text="Minutes", bg='#27348b', fg='white', font="Arial 12").grid(sticky = E, row=13, column=0, padx=0, pady=2)
-    sb3 = Spinbox(menu_frame, text='b3', width=5, from_=00, to=24, command=sb3_changed)
+    end_hours = Spinbox(menu_frame, text='b3', width=5, from_=00, to=24, command=sb3_changed)
     colon2 = Label(menu_frame,  text=":", bg='#27348b', fg='white', font="Arial 12")
-    sb4 = Spinbox(menu_frame, text='b4', width=5, from_=00, to=59, command=sb4_changed)
-    sb3.place(x=15, y=380)
+    end_minutes = Spinbox(menu_frame, text='b4', width=5, from_=00, to=59, command=sb4_changed)
+    end_hours.place(x=15, y=380)
     colon2.place(x=85, y=380)
-    sb4.place(x=98, y=380)
+    end_minutes.place(x=98, y=380)
     Label(menu_frame,  text='', bg='#27348b', fg='white', font="Arial 12").grid(sticky = E, row=14, column=0, padx=0, pady=2) #filler label
 
+    #For the separation line
     canvas2 = Canvas(menu_frame, width=170, height=40, background='#27348b', highlightthickness=0, relief='ridge')
     canvas2.create_line(5, 25, 165, 25, width=0, fill='white')
     canvas2.grid(row=15, column=0)
 
-    Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#e2b600', activebackground='#e2b600', focuscolor='', borderless=True, padx=10, pady=15).grid(row=16, column=0, rowspan=2)
-    Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#3e8638', activebackground='#3e8638', focuscolor='', borderless=True, padx=5, pady=15).grid(row=18, rowspan=2, column=0)
+    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#e2b600', activebackground='#e2b600', focuscolor='', borderless=True, padx=10, pady=15).grid(row=16, column=0, rowspan=2)
+    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#3e8638', activebackground='#3e8638', focuscolor='', borderless=True, padx=5, pady=15).grid(row=18, rowspan=2, column=0)
     
+    #Logo
     uwa_logo = Image.open("./UWA-logo-1.png")
     img_resized=uwa_logo.resize((200,100)) # new width & height
     my_img=ImageTk.PhotoImage(img_resized)
