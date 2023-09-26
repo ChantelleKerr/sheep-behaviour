@@ -3,6 +3,8 @@ import sys
 import time
 import webbrowser
 from tkinter import *
+import threading
+from queue import Queue
 from tkinter import filedialog, messagebox, PhotoImage, ttk
 from tkmacosx import Button #for button colours since doesn't work on macOS (Tkinter issue)
 from tkcalendar import DateEntry
@@ -11,12 +13,67 @@ from PIL import Image, ImageTk
 from data_cleaning.data_clean import ProcessData
 
 #Global variables
-folder_path = None
-path_to_folder = None
+folder_paths = []
+path_to_cleaned_data_batch = None
 sheep_name = None
+current_mode = None
+active_labels = []
+
+global_var_lock = threading.Lock()
 
 def getFolders():
-    print("get folders here")
+    global folder_paths
+    global active_labels 
+
+    for label in active_labels:
+        label.grid_remove()
+    active_labels.clear()
+
+    label_count = 0
+    while True:
+        folder_path = filedialog.askdirectory()
+
+        if not folder_path:
+            print("folder paths1: ")
+            print(folder_paths)
+            break  # User clicked Cancel or closed the dialog
+        else: 
+            # ERROR-HANDLING: Check if only <= 1 file in the folder. Break Selection if True.
+            files_in_folder = os.listdir(folder_path)
+            print("files in folder:")
+            print(files_in_folder)
+            if len(files_in_folder) <= 1:
+                messagebox.showerror("Error", "Please select a folder containing more than one data file.")
+                print("ERROR")
+                load_files_button["state"] = NORMAL
+                clean_files_button["state"] = DISABLED
+                folder_paths.pop()
+                break
+
+            # Otherwise: Update GUI and add Path to Array.
+            folder_paths.append(folder_path)
+            load_label_batch = Label(graph_frame, text="Successfully loaded: " + folder_path, font=("Helvetica", 18)) 
+            load_label_batch.grid(row=label_count, column=3, sticky="ew")
+            active_labels.append(load_label_batch)
+
+            if len(folder_paths) == 3:
+                load_files_button["state"] = DISABLED
+                break
+
+
+            print("folder path: "+ folder_path)
+         # Update the label with the selected folder paths
+        label_count += 1
+    print("folder paths:")
+    print(folder_paths)
+
+    if len(folder_paths) == 0:
+        load_files_button["state"] = NORMAL
+        clean_files_button["state"] = DISABLED
+    else: 
+        load_files_button["state"] = DISABLED
+        clean_files_button["state"] = NORMAL
+
 
 def cleanFiles(root):
     print("Data cleaning stuff in here")
@@ -53,8 +110,9 @@ if __name__ == "__main__":
 
     #Data Processing
     Label(menu_frame,  text="Data Processing", bg='#27348b', fg='white', font="Arial 16").grid(row=0, column=0, padx=25, pady=10)
-    load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 14 bold", background='#e2b600', activebackground='#e2b600', focuscolor='', borderless=True, padx=5, pady=15, command=getFolders).grid(row=1, column=0, rowspan=2)
-    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 14 bold", background='#3e8638', activebackground='#3e8638', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: cleanFiles(root))
+    load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=5, pady=15, command=getFolders)
+    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: cleanFiles(root))
+    load_files_button.grid(row=1, column=0, rowspan=2)
     clean_files_button.grid(row=3, rowspan=2, column=0)
     
     #For the separation line
@@ -101,8 +159,8 @@ if __name__ == "__main__":
     canvas2.create_line(5, 25, 165, 25, width=0, fill='white')
     canvas2.grid(row=15, column=0)
 
-    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#e2b600', activebackground='#e2b600', focuscolor='', borderless=True, padx=10, pady=15).grid(row=16, column=0, rowspan=2)
-    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#3e8638', activebackground='#3e8638', focuscolor='', borderless=True, padx=5, pady=15).grid(row=18, rowspan=2, column=0)
+    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=10, pady=15).grid(row=16, column=0, rowspan=2)
+    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, padx=5, pady=15).grid(row=18, rowspan=2, column=0)
     
     #Logo
     uwa_logo = Image.open("./UWA-logo-1.png")
@@ -111,6 +169,17 @@ if __name__ == "__main__":
 
     l1=Label(menu_frame,image=my_img,background='#27348b')
     l1.place(rely=1.0, relx=1.0, x=-85, y=-10, anchor=S)
+
+    #Graph labels and buttons
+    Label(graph_frame,  text="Current Directory", fg='#27348b', font="Arial 12 bold").grid(row=0, column=0, padx=2, pady=5, rowspan=2)
+    Label(graph_frame,  text="", fg='black', font="Arial 12").grid(sticky = W, row=0, column=1, padx=2, pady=5, rowspan=2)
+    Label(graph_frame,  text="Current Mode", fg='#27348b', font="Arial 12 bold").grid(sticky = W, row=3, column=0, padx=2)
+    Label(graph_frame,  text=current_mode, fg='black', font="Arial 12").grid(sticky = W, row=3, column=1, padx=2, pady=5, rowspan=2)
+
+    export_pdf_button = Button(graph_frame, text="EXPORT TO PDF", font="Arial 12", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10)
+    generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 12", background='#fdc300', activebackground='#a2c03b', focuscolor='', borderless=True, padx=0, pady=10)
+    export_pdf_button.place(x=300, y=500)
+    generate_report_button.place(x=450, y=500)
 
     root.mainloop()
 
