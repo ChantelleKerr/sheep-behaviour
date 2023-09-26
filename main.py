@@ -134,7 +134,6 @@ def sb4_changed(): # second spinbox
 def selectSheep():
     global selected_sheep
     folder_path = filedialog.askdirectory()
-    
     file_name = folder_path.rsplit("/", 1)[1]
     
     try:
@@ -154,7 +153,10 @@ def selectSheep():
         return
     
     messagebox.showinfo("Success", "Successfully selected: " + selected_sheep)
-    
+
+
+def startAnalysis():
+    messagebox.showinfo("Success", "Analysis of " + selected_sheep + " commencing")
 
 ## Application starting point
 ## Run python3 main.py or python main.py
@@ -232,7 +234,7 @@ if __name__ == "__main__":
     canvas2.grid(row=15, column=0)
 
     select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=10, pady=15, command=selectSheep)
-    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=5, pady=15)
+    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=5, pady=15, command=startAnalysis)
     select_sheep_button.grid(row=16, column=0, rowspan=2)
     start_analysis_button.grid(row=18, rowspan=2, column=0)
     
