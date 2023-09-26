@@ -15,7 +15,6 @@ from data_cleaning.data_clean import ProcessData
 #Global variables
 folder_paths = []
 path_to_cleaned_data_batch = None
-sheep_name = None
 current_mode = None
 active_labels = []
 terminal_window = None
@@ -90,8 +89,35 @@ def getFolders():
         makeTerminal()
         writeToTerminal()
 
-def cleanFiles(root):
-    print("Data cleaning stuff in here")
+def cleanFiles(read_pb, clean_pb, write_pb, root):
+    process_data = ProcessData()
+    
+    for path in folder_paths:
+        
+        folder_path_list = path.rsplit("/", 1)
+        path_to_folder = folder_path_list[0]
+        sheep_name = folder_path_list[1]
+        
+        combined_data = process_data.read_data(path, read_pb, root)
+        print("Cleaning data in progress")
+        cleaned_data = process_data.start_clean_data(clean_pb, root, combined_data)
+        combined_data = [] # free memory
+        print("Completed data cleaning")
+    
+        clean_data_folder = path_to_folder+"/"+sheep_name+"_cleaned_data"
+
+        if os.path.isdir(clean_data_folder) == False:
+            os.mkdir(clean_data_folder)
+
+        print("Writing to CSV in progress")
+        process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", write_pb, root)
+        print("Completed writing")
+        cleaned_data = [] # Free memory
+
+        print(clean_data_folder)
+
+    messagebox.showinfo("Success", "Successfully cleaned selected data files")
+    webbrowser.open('file:///'+clean_data_folder)
 
 def sb1_changed(): # first spinbox
     print("For start hours spinbox")
@@ -115,18 +141,24 @@ if __name__ == "__main__":
     root.resizable(False, False)
 
     #Root-> Frames
-    menu_frame = Frame(root, width=180, height=700, bg='#27348b')
+    menu_frame = Frame(root, width=220, height=700, bg='#27348b')
     menu_frame.grid(row=0, column=0, columnspan=2)
     menu_frame.grid_propagate(0) #stops it resizing
 
     graph_frame = Frame(root, width=620, height=700, bg='white')
     graph_frame.grid(row=0, column=2)
     graph_frame.grid_propagate(0)
+    
+    # Progress Bars
+    read_pb = ttk.Progressbar(root, style="TProgressbar")
+    clean_pb = ttk.Progressbar(root, mode="indeterminate", style="TProgressbar")
+    write_pb = ttk.Progressbar(root, mode="indeterminate", style="TProgressbar")
+
 
     #Data Processing
     Label(menu_frame,  text="Data Processing", bg='#27348b', fg='white', font="Arial 16").grid(row=0, column=0, padx=25, pady=10)
     load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=5, pady=15, command=getFolders)
-    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: cleanFiles(root))
+    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: cleanFiles(read_pb, clean_pb, write_pb, root))
     load_files_button.grid(row=1, column=0, rowspan=2)
     clean_files_button.grid(row=3, rowspan=2, column=0)
     
