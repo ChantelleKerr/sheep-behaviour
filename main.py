@@ -142,17 +142,18 @@ def selectSheep():
             sheep = os.listdir(folder_path)[0]
             if sheep.endswith(".csv"):
                 selected_sheep = sheep
+                start_analysis_button["state"] = NORMAL
             else:
-                print("Error: sheep file is not a csv")
+                messagebox.showerror("Error", "Sheep file is not a csv")
                 return
         else:
-            print("Error: invalid directory name, must be a cleaned data file")
+            messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
             return
     except:
-        print("Error: invalid directory name, must be a cleaned data file")
+        messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
         return
     
-    print(selected_sheep)
+    messagebox.showinfo("Success", "Successfully selected: " + selected_sheep)
     
 
 ## Application starting point
@@ -230,8 +231,10 @@ if __name__ == "__main__":
     canvas2.create_line(5, 25, 165, 25, width=0, fill='white')
     canvas2.grid(row=15, column=0)
 
-    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=10, pady=15, command=selectSheep).grid(row=16, column=0, rowspan=2)
-    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, padx=5, pady=15).grid(row=18, rowspan=2, column=0)
+    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=10, pady=15, command=selectSheep)
+    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=5, pady=15)
+    select_sheep_button.grid(row=16, column=0, rowspan=2)
+    start_analysis_button.grid(row=18, rowspan=2, column=0)
     
     #Logo
     uwa_logo = Image.open("./UWA-logo-1.png")
