@@ -18,8 +18,21 @@ path_to_cleaned_data_batch = None
 sheep_name = None
 current_mode = None
 active_labels = []
+terminal_window = None
 
 global_var_lock = threading.Lock()
+
+def makeTerminal():
+    global terminal_window
+    terminal_window = Toplevel()
+    terminal_window.title("Terminal Window")
+    terminal_window.config(width=300, height=200)
+
+def writeToTerminal():
+    text = Text(terminal_window, height=50, width=100)
+    text.pack()
+    text.insert(END, "Successfully loaded:")
+    text.insert(END, folder_paths)
 
 def getFolders():
     global folder_paths
@@ -52,9 +65,10 @@ def getFolders():
 
             # Otherwise: Update GUI and add Path to Array.
             folder_paths.append(folder_path)
-            load_label_batch = Label(graph_frame, text="Successfully loaded: " + folder_path, font=("Helvetica", 18)) 
-            load_label_batch.grid(row=label_count, column=3, sticky="ew")
-            active_labels.append(load_label_batch)
+            # might not need if we use a terminal window:
+            # load_label_batch = Label(graph_frame, text="Successfully loaded: " + folder_path, font=("Helvetica", 18)) 
+            # load_label_batch.grid(row=label_count, column=3, sticky="ew")
+            # active_labels.append(load_label_batch)
 
             if len(folder_paths) == 3:
                 load_files_button["state"] = DISABLED
@@ -73,7 +87,8 @@ def getFolders():
     else: 
         load_files_button["state"] = DISABLED
         clean_files_button["state"] = NORMAL
-
+        makeTerminal()
+        writeToTerminal()
 
 def cleanFiles(root):
     print("Data cleaning stuff in here")
