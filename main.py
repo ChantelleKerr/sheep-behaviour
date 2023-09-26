@@ -15,6 +15,7 @@ from data_cleaning.data_clean import ProcessData
 #Global variables
 folder_paths = []
 path_to_cleaned_data_batch = None
+selected_sheep = None
 current_mode = None
 active_labels = []
 terminal_window = None
@@ -93,7 +94,6 @@ def cleanFiles(read_pb, clean_pb, write_pb, root):
     process_data = ProcessData()
     
     for path in folder_paths:
-        
         folder_path_list = path.rsplit("/", 1)
         path_to_folder = folder_path_list[0]
         sheep_name = folder_path_list[1]
@@ -117,7 +117,6 @@ def cleanFiles(read_pb, clean_pb, write_pb, root):
         print(clean_data_folder)
 
     messagebox.showinfo("Success", "Successfully cleaned selected data files")
-    webbrowser.open('file:///'+clean_data_folder)
 
 def sb1_changed(): # first spinbox
     print("For start hours spinbox")
@@ -130,6 +129,31 @@ def sb3_changed(): # first spinbox
 
 def sb4_changed(): # second spinbox
     print("For end minutes spinbox")
+
+# Selects and holds a sheep csv file from a cleaned sheep directory.
+def selectSheep():
+    global selected_sheep
+    folder_path = filedialog.askdirectory()
+    
+    file_name = folder_path.rsplit("/", 1)[1]
+    
+    try:
+        if file_name.split('_', 1)[1] == "cleaned_data":
+            sheep = os.listdir(folder_path)[0]
+            if sheep.endswith(".csv"):
+                selected_sheep = sheep
+            else:
+                print("Error: sheep file is not a csv")
+                return
+        else:
+            print("Error: invalid directory name, must be a cleaned data file")
+            return
+    except:
+        print("Error: invalid directory name, must be a cleaned data file")
+        return
+    
+    print(selected_sheep)
+    
 
 ## Application starting point
 ## Run python3 main.py or python main.py
@@ -206,7 +230,7 @@ if __name__ == "__main__":
     canvas2.create_line(5, 25, 165, 25, width=0, fill='white')
     canvas2.grid(row=15, column=0)
 
-    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=10, pady=15).grid(row=16, column=0, rowspan=2)
+    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=10, pady=15, command=selectSheep).grid(row=16, column=0, rowspan=2)
     start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, padx=5, pady=15).grid(row=18, rowspan=2, column=0)
     
     #Logo
