@@ -70,47 +70,51 @@ class ProcessData():
 
     def clean_data(self, df, df_queue):
 
-        first_index_of_day_15 = df[df['DAY'] == 15].index.min()
-        # Remove all rows before that index and reset the index
-        df = df.iloc[first_index_of_day_15:].reset_index(drop=True)
+        try:
+            first_index_of_day_15 = df[df['DAY'] == 15].index.min()
+            # Remove all rows before that index and reset the index
+            df = df.iloc[first_index_of_day_15:].reset_index(drop=True)
 
-        # Extract the date values and format it for calculations
-        columns_to_extract = ['DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND']
-        values_of_first_valid_row = df.loc[0, columns_to_extract].astype(int).values
-        datetime_format = '%d %m %Y %H %M %S'
-        datetime_str = ' '.join(map(str, values_of_first_valid_row))
-        datetime_obj = pd.to_datetime(datetime_str, format=datetime_format) + pd.Timedelta(hours=8) # Convert from GMT to GMT+8. (AWST)
-        df = df.drop(index=0).reset_index(drop=True)
+            # Extract the date values and format it for calculations
+            columns_to_extract = ['DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND']
+            values_of_first_valid_row = df.loc[0, columns_to_extract].astype(int).values
+            datetime_format = '%d %m %Y %H %M %S'
+            datetime_str = ' '.join(map(str, values_of_first_valid_row))
+            datetime_obj = pd.to_datetime(datetime_str, format=datetime_format) + pd.Timedelta(hours=8) # Convert from GMT to GMT+8. (AWST)
+            df = df.drop(index=0).reset_index(drop=True)
 
-        df = df.drop(columns=['LAT', 'LON', 'DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND'])
-        
-        mask = np.logical_and([s.startswith('*') for s in df['ACCEL_X']], df.index % 1560 == 0)
+            df = df.drop(columns=['LAT', 'LON', 'DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND'])
+            
+            mask = np.logical_and([s.startswith('*') for s in df['ACCEL_X']], df.index % 1560 == 0)
 
-        # # Calculates how many minutes since the initial date (based on the mask)
-        seconds_to_add = np.zeros(len(df))
-        seconds_to_add[mask] = np.arange(0, mask.sum()) * 60
+            # # Calculates how many minutes since the initial date (based on the mask)
+            seconds_to_add = np.zeros(len(df))
+            seconds_to_add[mask] = np.arange(0, mask.sum()) * 60
 
-        # Calculates a new date from the initial date for every minute
-        df['DATE'] = None
-        df.loc[mask, 'DATE'] = datetime_obj + pd.to_timedelta(seconds_to_add[mask], unit='s')
-        df['DATE'] = df['DATE'].shift(1)
+            # Calculates a new date from the initial date for every minute
+            df['DATE'] = None
+            df.loc[mask, 'DATE'] = datetime_obj + pd.to_timedelta(seconds_to_add[mask], unit='s')
+            df['DATE'] = df['DATE'].shift(1)
 
-        # Remove -2048,-2048,-2048 and shift the date one index before removing
-        mask = (df['ACCEL_X'] == '-2048') & (df['ACCEL_Y'] == -2048) & (df['ACCEL_Z'] == -2048)
-        mask_indices = df.index[mask]
-        if not mask_indices.empty:
-            next_index = mask_indices + 1
-            df.loc[next_index, 'DATE'] = df.loc[mask_indices, 'DATE'].values
+            # Remove -2048,-2048,-2048 and shift the date one index before removing
+            mask = (df['ACCEL_X'] == '-2048') & (df['ACCEL_Y'] == -2048) & (df['ACCEL_Z'] == -2048)
+            mask_indices = df.index[mask]
+            if not mask_indices.empty:
+                next_index = mask_indices + 1
+                df.loc[next_index, 'DATE'] = df.loc[mask_indices, 'DATE'].values
 
-        # Remove rows starting with "*"
-        mask2 = df.iloc[:, 0].str.startswith('*') 
-        # Remove 0,0,0 rows
-        mask3 = (df['ACCEL_X'] == '0') & (df['ACCEL_Y'] == 0) & (df['ACCEL_Z'] == 0)
+            # Remove rows starting with "*"
+            mask2 = df.iloc[:, 0].str.startswith('*') 
+            # Remove 0,0,0 rows
+            mask3 = (df['ACCEL_X'] == '0') & (df['ACCEL_Y'] == 0) & (df['ACCEL_Z'] == 0)
 
-        combined_mask = mask | mask2 | mask3
-        df = df[~combined_mask]
+            combined_mask = mask | mask2 | mask3
+            df = df[~combined_mask]
 
-        df_queue.put(df)
+            df_queue.put(df)
+
+        except:
+            print("Error: Cannot clean file")
 
 
     def start_clean_data(self, clean_pb, window, df):
