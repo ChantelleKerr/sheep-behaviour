@@ -43,7 +43,7 @@ class ProcessData():
                     df = pd.read_csv(file_path)
                     header = df.columns.tolist()
                 else:
-                    df = pd.read_csv(file_path, header=None, names=header)
+                    df = pd.read_csv(file_path, header=None, names=header, low_memory=False)
                 
                 rows_with_day_15 = df[df['DAY'] == 15]
 
