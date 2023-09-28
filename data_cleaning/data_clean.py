@@ -44,7 +44,7 @@ class ProcessData():
                     if header is None:
                         df = pd.read_csv(file_path)
                         header = df.columns.tolist()
-                        if header != 'ACCEL_X,ACCEL_Y,ACCEL_Z,LAT,LON,DAY,MONTH,YEAR,HOUR,MINUTE,SECOND':
+                        if header != ['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z', 'LAT', 'LON', 'DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND']:
                             break
                     else:
                         df = pd.read_csv(file_path, header=None, names=header)
@@ -53,12 +53,14 @@ class ProcessData():
 
                     if len(rows_with_day_15) > 0:
                         found_day_15 = True
-                    else:
                         break
                     
                     if found_day_15:
                         dfs.append(df)
                         day_counter += 1
+
+        if not found_day_15:
+            return []
         try:
             read_pb.place_forget()  
             label.place_forget()
@@ -102,7 +104,7 @@ class ProcessData():
             if not mask_indices.empty:
                 next_index = mask_indices + 1
                 df.loc[next_index, 'DATE'] = df.loc[mask_indices, 'DATE'].values
-
+            
             # Remove rows starting with "*"
             mask2 = df.iloc[:, 0].str.startswith('*') 
             # Remove 0,0,0 rows
@@ -110,6 +112,7 @@ class ProcessData():
 
             combined_mask = mask | mask2 | mask3
             df = df[~combined_mask]
+
 
             df_queue.put(df)
 
