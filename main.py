@@ -1,134 +1,125 @@
 import os
-import sys
 import time
 import webbrowser
+import ttk
 from tkinter import *
 import threading
 from queue import Queue
-from tkinter import filedialog, messagebox, PhotoImage, ttk
+from tkinter import messagebox
 from tkmacosx import Button #for button colours since doesn't work on macOS (Tkinter issue)
 from tkcalendar import DateEntry
 from PIL import Image, ImageTk
-
 from data_cleaning.data_clean import ProcessData
+from tkfilebrowser import askopendirnames, askopenfilename
 
-#Global variables
-folder_paths = []
-path_to_cleaned_data_batch = None
-selected_sheep = None
-current_mode = None
-active_labels = []
-terminal_window = None
+# from data_cleaning.data_clean_threaded import ProcessData_Threaded
+# from data_analysis.plot import start_analysis
+
+clean_data_folder = None
+sheep_file = None
 
 global_var_lock = threading.Lock()
 
-def makeTerminal():
-    global terminal_window
-    terminal_window = Toplevel()
-    terminal_window.title("Terminal Window")
-    terminal_window.config(width=300, height=200)
+def getFolders(folder_paths):
+    folder_paths.append(askopendirnames())
+    print(folder_paths)
 
-def writeToTerminal():
-    text = Text(terminal_window, height=50, width=100)
-    text.pack()
-    text.insert(END, "Successfully loaded:")
-    text.insert(END, folder_paths)
-
-def getFolders():
-    global folder_paths
-    global active_labels 
-
-    for label in active_labels:
-        label.grid_remove()
-    active_labels.clear()
-
-    label_count = 0
-    while True:
-        folder_path = filedialog.askdirectory()
-
-        if not folder_path:
-            print("folder paths1: ")
-            print(folder_paths)
-            break  # User clicked Cancel or closed the dialog
-        else: 
-            # ERROR-HANDLING: Check if only <= 1 file in the folder. Break Selection if True.
+    for tuple in folder_paths:
+        for folder_path in tuple:
             files_in_folder = os.listdir(folder_path)
-            print("files in folder:")
+            print("Files in Folder:")
             print(files_in_folder)
+
+            #Checking that selected folders contain more than 1 file 
             if len(files_in_folder) <= 1:
-                messagebox.showerror("Error", "Please select a folder containing more than one data file.")
-                print("ERROR")
-                load_files_button["state"] = NORMAL
-                clean_files_button["state"] = DISABLED
+                messagebox.showerror("Error", "Folder: "+folder_path+" contains less than 2 files. Please select a folder which contains more than one data file.")
                 folder_paths.pop()
                 break
 
-            # Otherwise: Update GUI and add Path to Array.
-            folder_paths.append(folder_path)
-            # might not need if we use a terminal window:
-            # load_label_batch = Label(graph_frame, text="Successfully loaded: " + folder_path, font=("Helvetica", 18)) 
-            # load_label_batch.grid(row=label_count, column=3, sticky="ew")
-            # active_labels.append(load_label_batch)
-
-            if len(folder_paths) == 3:
-                load_files_button["state"] = DISABLED
-                break
-
-
-            print("folder path: "+ folder_path)
-         # Update the label with the selected folder paths
-        label_count += 1
-    print("folder paths:")
-    print(folder_paths)
-
-    if len(folder_paths) == 0:
-        load_files_button["state"] = NORMAL
-        clean_files_button["state"] = DISABLED
-    else: 
+    if len(folder_paths) == 1:
         load_files_button["state"] = DISABLED
         clean_files_button["state"] = NORMAL
-        makeTerminal()
-        writeToTerminal()
+    return folder_paths
 
-def cleanFiles(read_pb, clean_pb, write_pb, root):
-    process_data = ProcessData()
-    
-    for path in folder_paths:
-        folder_path_list = path.rsplit("/", 1)
+# MULTITHREADED: Batch Cleaning
+def clean_files_thread(folder_path):
+    global_var_lock.acquire()
+    global clean_data_folder
+    try:
+        # process_data = ProcessData_Threaded()
+        # combined_data = process_data.read_data(folder_path)
+
+        #Get sheep name for clean file name
+        folder_path_list = folder_path.rsplit("/", 1)
         path_to_folder = folder_path_list[0]
         sheep_name = folder_path_list[1]
-        
-        combined_data = process_data.read_data(path, read_pb, root)
-        print("Cleaning data in progress")
-        cleaned_data = process_data.start_clean_data(clean_pb, root, combined_data)
-        combined_data = [] # free memory
-        print("Completed data cleaning")
-    
-        clean_data_folder = path_to_folder+"/"+sheep_name+"_cleaned_data"
 
-        if os.path.isdir(clean_data_folder) == False:
+        print("Currently cleaning folder: "+sheep_name)
+        # cleaned_data = process_data.start_clean_data(combined_data)
+        combined_data = []  # Free memory
+        print("Completed cleaning for folder "+sheep_name)
+
+        clean_data_folder = path_to_folder + "/cleaned_data_batch"
+        if not os.path.isdir(clean_data_folder):
             os.mkdir(clean_data_folder)
 
-        print("Writing to CSV in progress")
-        process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", write_pb, root)
-        print("Completed writing")
-        cleaned_data = [] # Free memory
+        print("Currently writing CSV for folder: "+sheep_name)
+        # process_data.start_save_to_csv(cleaned_data, clean_data_folder + "/" + sheep_name + ".csv")
+        print("Completed writing CSV for folder: "+sheep_name)
+        cleaned_data = []  # Free memory
+    finally:
+    # Release the lock after modifying the array
+        global_var_lock.release()
 
-        print(clean_data_folder)
+def cleanFiles(folder_paths):
+    global clean_data_folder
 
-    messagebox.showinfo("Success", "Successfully cleaned selected data files")
+    print("Folder paths in clean file:")
+    print(folder_paths)
 
-def sb1_changed(): # first spinbox
-    print("For start hours spinbox")
+    threads = []
+    start_time = time.time()
 
-def sb2_changed(): # second spinbox
-    print("For start minutes spinbox")
+    for tuple in folder_paths:
+        for folder_path in tuple:
+            thread = threading.Thread(target=clean_files_thread, args=(folder_path,))
+            threads.append(thread)
+            thread.start()
 
-def sb3_changed(): # first spinbox
-    print("For end hours spinbox")
+        for thread in threads:
+            thread.join()
 
-def sb4_changed(): # second spinbox
-    print("For end minutes spinbox")
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Elapsed Threading Time: {elapsed_time} seconds")
+
+    messagebox.showinfo("Success", "Successfully cleaned selected data folders.")
+    print(clean_data_folder)
+    webbrowser.open('file:///'+ clean_data_folder)
+    multithread_reset()
+
+def multithread_reset():
+    global folder_paths
+    folder_paths = [] # FREE THREADING FILE PATHS
+    load_files_button["state"] = NORMAL
+    clean_files_button["state"] = DISABLED
+
+def startAnalysis(start_date, end_date, start_hour, start_minute, end_hour, end_minute):
+    global sheep_file
+    if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
+        formatted_start = str(start_date) + " " + start_hour + ":" + start_minute + ":" + "00"
+        formatted_end = str(end_date) + " " + end_hour + ":" + end_minute + ":" + "00"
+        print(formatted_start)
+        print(formatted_end)
+
+        #Call analysis function here - Chantelle's function
+        #start_analysis(sheep_file, formatted_start, formatted_end)
+    else:
+        messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
+    
+def defocus(event):
+    event.widget.master.focus_set()
+    event.widget.master.selection_clear()
 
 # Selects and holds a sheep csv file from a cleaned sheep directory.
 def selectSheep():
@@ -161,6 +152,8 @@ def startAnalysis():
 ## Application starting point
 ## Run python3 main.py or python main.py
 if __name__ == "__main__":
+    folder_paths = []
+
     root = Tk()
     root.title("Sheep Behavious Analysis")
     root.config(bg="red")
@@ -184,8 +177,8 @@ if __name__ == "__main__":
 
     #Data Processing
     Label(menu_frame,  text="Data Processing", bg='#27348b', fg='white', font="Arial 16").grid(row=0, column=0, padx=25, pady=10)
-    load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=5, pady=15, command=getFolders)
-    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: cleanFiles(read_pb, clean_pb, write_pb, root))
+    load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=5, pady=15, command = lambda: getFolders(folder_paths))
+    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: cleanFiles(folder_paths))
     load_files_button.grid(row=1, column=0, rowspan=2)
     clean_files_button.grid(row=3, rowspan=2, column=0)
     
@@ -198,34 +191,60 @@ if __name__ == "__main__":
     Label(menu_frame,  text="Data Analysis", bg='#27348b', fg='white', font="Arial 16").grid(row=6, column=0, padx=25, pady=5)
     
     Label(menu_frame,  text="Start Date", bg='#27348b', justify="left", anchor="w", fg='white', font="Arial 12").grid(sticky = W, row=7, column=0, padx=10, pady=0)
-    start_date = date_entry = DateEntry(menu_frame, background='#27348b', selectmode='day')
-    date_entry._top_cal.overrideredirect(False)
-    date_entry.grid(row=8, column=0)
+    start_date = DateEntry(menu_frame, background='#27348b', selectmode='day', date_pattern='yyyy-MM-dd')
+    start_date._top_cal.overrideredirect(False)
+    start_date.grid(row=8, column=0)
 
-    Label(menu_frame,  text="Hour", bg='#27348b', fg='white', font="Arial 12").grid(sticky = W, row=9, column=0, padx=0, pady=2)
-    Label(menu_frame,  text="Minutes", bg='#27348b', fg='white', font="Arial 12").grid(sticky = E, row=9, column=0, padx=0, pady=2)
+    Label(menu_frame,  text="Start Time", bg='#27348b', fg='white', font="Arial 12").grid(sticky = W, row=9, column=0, padx=0, pady=2)
     Label(menu_frame,  text='', bg='#27348b', fg='white', font="Arial 12").grid(sticky = E, row=10, column=0, padx=0, pady=3) #filler label
     
-    start_hours = Spinbox(menu_frame, text='b1', width=5, from_=00, to=24, command=sb1_changed)
-    colon1 = Label(menu_frame,  text=":", bg='#27348b', fg='white', font="Arial 12")
-    start_minutes = Spinbox(menu_frame, text='b2', width=5, from_=00, to=59, command=sb2_changed)
+    hours_list = []
+    minutes_list = []
+    for i in range(24):
+        if i < 10:
+            hours_list.append('0'+str(i))
+        else:
+            hours_list.append(str(i))
+    for i in range(60):
+        if i < 10:
+            minutes_list.append('0'+str(i))
+        else:
+            minutes_list.append(str(i))
+
+    start_hour = StringVar(menu_frame)
+    start_hour.set("Hour")
+    start_hours = ttk.Combobox(menu_frame, textvariable=start_hour, state="readonly", values=hours_list, width=5)
+    start_hours.bind("<FocusIn>", defocus)
     start_hours.place(x=15, y=275)
-    colon1.place(x=85, y=275)
+    
+    colon1 = Label(menu_frame,  text=":", bg='#27348b', fg='white', font="Arial 12")
+    colon1.place(x=86, y=275)
+
+    start_minute = StringVar(menu_frame)
+    start_minute.set("Mins")
+    start_minutes = ttk.Combobox(menu_frame, textvariable=start_minute, state="readonly", values=minutes_list, width=5)
+    start_minutes.bind("<FocusIn>", defocus)
     start_minutes.place(x=98, y=275)
 
     Label(menu_frame,  text="End Date", bg='#27348b', justify="left", anchor="w", fg='white', font="Arial 12").grid(sticky = W, row=11, column=0, padx=10, pady=0)
-    end_date = date_entry = DateEntry(menu_frame, background='#27348b', selectmode='day')
-    date_entry._top_cal.overrideredirect(False)
-    date_entry.grid(row=12, column=0)
+    end_date = DateEntry(menu_frame, background='#27348b', selectmode='day', date_pattern='yyyy-MM-dd')
+    end_date._top_cal.overrideredirect(False)
+    end_date.grid(row=12, column=0)
 
-    Label(menu_frame,  text="Hour", bg='#27348b', fg='white', font="Arial 12").grid(sticky = W, row=13, column=0, padx=0, pady=2)
-    Label(menu_frame,  text="Minutes", bg='#27348b', fg='white', font="Arial 12").grid(sticky = E, row=13, column=0, padx=0, pady=2)
-    end_hours = Spinbox(menu_frame, text='b3', width=5, from_=00, to=24, command=sb3_changed)
-    colon2 = Label(menu_frame,  text=":", bg='#27348b', fg='white', font="Arial 12")
-    end_minutes = Spinbox(menu_frame, text='b4', width=5, from_=00, to=59, command=sb4_changed)
+    Label(menu_frame,  text="End Time", bg='#27348b', fg='white', font="Arial 12").grid(sticky = W, row=13, column=0, padx=0, pady=2)
+    end_hour = StringVar(menu_frame)
+    end_hour.set("Hour")
+    end_hours = ttk.Combobox(menu_frame, textvariable=end_hour, state="readonly", values=hours_list, width=5)
     end_hours.place(x=15, y=380)
-    colon2.place(x=85, y=380)
+
+    colon2 = Label(menu_frame,  text=":", bg='#27348b', fg='white', font="Arial 12")
+    colon2.place(x=86, y=380)
+
+    end_minute = StringVar(menu_frame)
+    end_minute.set("Mins")
+    end_minutes = ttk.Combobox(menu_frame, textvariable=end_minute, state="readonly", values=minutes_list, width=5)
     end_minutes.place(x=98, y=380)
+
     Label(menu_frame,  text='', bg='#27348b', fg='white', font="Arial 12").grid(sticky = E, row=14, column=0, padx=0, pady=2) #filler label
 
     #For the separation line
@@ -233,10 +252,8 @@ if __name__ == "__main__":
     canvas2.create_line(5, 25, 165, 25, width=0, fill='white')
     canvas2.grid(row=15, column=0)
 
-    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=10, pady=15, command=selectSheep)
-    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=5, pady=15, command=startAnalysis)
-    select_sheep_button.grid(row=16, column=0, rowspan=2)
-    start_analysis_button.grid(row=18, rowspan=2, column=0)
+    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=10, pady=15, command=selectSheep)    
+    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, padx=5, pady=15, command= lambda: startAnalysis(start_date.get_date(), end_date.get_date(), start_hours.get(), start_minutes.get(), end_hours.get(), end_minutes.get())).grid(row=18, rowspan=2, column=0)
     
     #Logo
     uwa_logo = Image.open("./UWA-logo-1.png")
@@ -250,7 +267,7 @@ if __name__ == "__main__":
     Label(graph_frame,  text="Current Directory", fg='#27348b', font="Arial 12 bold").grid(row=0, column=0, padx=2, pady=5, rowspan=2)
     Label(graph_frame,  text="", fg='black', font="Arial 12").grid(sticky = W, row=0, column=1, padx=2, pady=5, rowspan=2)
     Label(graph_frame,  text="Current Mode", fg='#27348b', font="Arial 12 bold").grid(sticky = W, row=3, column=0, padx=2)
-    Label(graph_frame,  text=current_mode, fg='black', font="Arial 12").grid(sticky = W, row=3, column=1, padx=2, pady=5, rowspan=2)
+    Label(graph_frame,  text="", fg='black', font="Arial 12").grid(sticky = W, row=3, column=1, padx=2, pady=5, rowspan=2)
 
     export_pdf_button = Button(graph_frame, text="EXPORT TO PDF", font="Arial 12", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10)
     generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 12", background='#fdc300', activebackground='#a2c03b', focuscolor='', borderless=True, padx=0, pady=10)
@@ -258,97 +275,3 @@ if __name__ == "__main__":
     generate_report_button.place(x=450, y=500)
 
     root.mainloop()
-
-
-# Get ("Load") folder with sheep files in it
-# def getFolder():
-#     global folder_path
-#     global path_to_folder
-#     global sheep_name
-    
-#     folder_path = filedialog.askdirectory()
-#     if not folder_path:
-#         return
-
-#     #Get sheep name for clean file name
-#     folder_path_list = folder_path.rsplit("/", 1)
-#     path_to_folder = folder_path_list[0]
-#     sheep_name = folder_path_list[1]
-
-#     # Get a list of files in the selected folder
-#     files_in_folder = os.listdir(folder_path)
-
-#     # Check if there is only one file in the folder. Throw Error box if True.
-#     if len(files_in_folder) <= 1:
-#         messagebox.showerror("Error", "Please select a folder containing more than one data file.")
-#         return
-
-#     load_label = Label(graph_frame, text="Successfully loaded: " + folder_path, font=("Helvetica", 18)) 
-#     load_label.grid(row=0, column=0, sticky="ew")
-#     clean_file_button["state"] = NORMAL
-
-# def cleanFiles(read_pb, clean_pb, write_pb, window):
-#     process_data = ProcessData()
-
-#     combined_data = process_data.read_data(folder_path, read_pb, window)
-
-#     print("Cleaning data in progress")
-#     cleaned_data = process_data.start_clean_data(clean_pb, window, combined_data)
-#     combined_data = [] # free memory
-#     print("Completed data cleaning")
-
-#     clean_data_folder = path_to_folder+"/cleaned_data"
-
-#     if os.path.isdir(clean_data_folder) == False:
-#         os.mkdir(clean_data_folder)
-
-#     print("Writing to CSV in progress")
-#     process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", write_pb, window)
-#     print("Completed writing")
-#     cleaned_data = [] # Free memory
-
-#     print(clean_data_folder)
-
-#     messagebox.showinfo("Success", "Successfully cleaned selected data files")
-#     webbrowser.open('file:///'+clean_data_folder)
-
-    # window = Tk()
-
-    # window.title("Sheep Behaviour Analysis")
-    # window.rowconfigure(0, minsize=800, weight=1)
-    # window.columnconfigure(1,minsize=800, weight=1)
-
-    # s = ttk.Style()
-    # s.theme_use("default")
-    # s.configure("TProgressbar", thickness=10)
-
-    #Progress Bars
-    # read_pb = ttk.Progressbar(root, style="TProgressbar")
-    # clean_pb = ttk.Progressbar(root, mode="indeterminate", style="TProgressbar")
-    # write_pb = ttk.Progressbar(root, mode="indeterminate", style="TProgressbar")
-
-    # #Frames
-    # menu_frame = Frame(window, width=500, relief=RAISED, bd=2, bg="#27348b")
-    # menu_frame.grid(row=0, column=0, sticky="ns")
-    # menu_frame.pack_propagate(0)
-
-    # second_frame = Frame(window)
-    # second_frame.grid(row=0,column=1)
-
-    # s = ttk.Style()
-    # s.theme_use("default")
-    # s.configure("TProgressbar", thickness=10)
-
-    # #Progress Bars
-    # read_pb = ttk.Progressbar(window, style="TProgressbar")
-    # clean_pb = ttk.Progressbar(window, mode="indeterminate", style="TProgressbar")
-    # write_pb = ttk.Progressbar(window, mode="indeterminate", style="TProgressbar")
-
-    # #Buttons
-    # load_file_button = Button(menu_frame, text='Load Files', command=getFolder) 
-    # load_file_button.grid(row=0, column=0, sticky="ew",padx=(10), pady=(5))
-
-    # clean_file_button = Button(menu_frame, text='Clean Files', state=DISABLED, command = lambda: cleanFiles(read_pb, clean_pb, write_pb, window))
-    # clean_file_button.grid(row=1, column=0, sticky="ew", padx=(10))
-
-    # window.mainloop()
