@@ -14,6 +14,7 @@ class ProcessData():
     def read_data(self, folder_path, read_pb, window):
         dfs = []
         file_names = sorted(os.listdir(folder_path))
+        combined_df = []
 
         header = None
         found_day_15 = False
@@ -43,6 +44,8 @@ class ProcessData():
                     if header is None:
                         df = pd.read_csv(file_path)
                         header = df.columns.tolist()
+                        if header != 'ACCEL_X,ACCEL_Y,ACCEL_Z,LAT,LON,DAY,MONTH,YEAR,HOUR,MINUTE,SECOND':
+                            break
                     else:
                         df = pd.read_csv(file_path, header=None, names=header)
                     
@@ -50,14 +53,18 @@ class ProcessData():
 
                     if len(rows_with_day_15) > 0:
                         found_day_15 = True
+                    else:
+                        break
                     
                     if found_day_15:
                         dfs.append(df)
                         day_counter += 1
-
-        read_pb.place_forget()  
-        label.place_forget()
-        combined_df = pd.concat(dfs, ignore_index=True)
+        try:
+            read_pb.place_forget()  
+            label.place_forget()
+            combined_df = pd.concat(dfs, ignore_index=True)
+        except:
+            print("Error: Invalid files in directory")
         return combined_df
     
 
