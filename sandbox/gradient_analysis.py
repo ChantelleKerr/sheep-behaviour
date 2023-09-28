@@ -21,7 +21,17 @@ with open(cleanedFile, 'r') as file:
     
     gradientMagnitudes = []
     
+    sumVector = np.array([0,0,0])
     prevVector = np.array([0, 0, 0])
+    
+    # For eigenvector calculations
+    # for line in file:
+    #     if index < startIndex:
+    #         pass
+    #     elif index < endIndex:
+    #         XYZ = line.split(',')
+    #         vector = np.array([int(XYZ[0]), int(XYZ[1]), int(XYZ[2])])
+    #         sumVector = np.add(sumVector, vector)
     
     print("X, Y, Z, Seconds")
     for line in file:
@@ -30,11 +40,12 @@ with open(cleanedFile, 'r') as file:
         elif index < endIndex:
             XYZ = line.split(',')
             vector = np.array([int(XYZ[0]), int(XYZ[1]), int(XYZ[2])])
+            
             gVector = np.array([vector[0] - prevVector[0], vector[1] - prevVector[1] , vector[2] - prevVector[2]])
 
             gMag = np.linalg.norm(gVector)
-            magPrev = np.linalg.norm(prevVector)
-            mag = np.linalg.norm(vector)
+            # magPrev = np.linalg.norm(prevVector)
+            # mag = np.linalg.norm(vector)
             
             prevVector[0] = vector[0]
             prevVector[1] = vector[1]
@@ -48,7 +59,8 @@ with open(cleanedFile, 'r') as file:
                 #print(XYZ[-1], vector, gVector, gMag)
         
         index += 1
-        
+    
+    print(sumVector)
     points = np.array(gradientMagnitudes)
     plt.plot(points)
     plt.show()
