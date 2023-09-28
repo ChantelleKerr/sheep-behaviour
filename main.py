@@ -9,6 +9,7 @@ from tkinter import messagebox
 from tkmacosx import Button #for button colours since doesn't work on macOS (Tkinter issue)
 from tkcalendar import DateEntry
 from PIL import Image, ImageTk
+from data_cleaning.data_clean import ProcessData
 from tkfilebrowser import askopendirnames, askopenfilename
 
 # from data_cleaning.data_clean_threaded import ProcessData_Threaded
@@ -38,7 +39,6 @@ def getFolders(folder_paths):
     if len(folder_paths) == 1:
         load_files_button["state"] = DISABLED
         clean_files_button["state"] = NORMAL
-    
     return folder_paths
 
 # MULTITHREADED: Batch Cleaning
@@ -121,19 +121,33 @@ def defocus(event):
     event.widget.master.focus_set()
     event.widget.master.selection_clear()
 
-def chooseSheep():
-    global sheep_file
-    sheep_filepath = askopenfilename()
-
-    sheep_filepath_list = sheep_filepath.rsplit("/", 1)
-    path_to_folder = sheep_filepath_list[0]
-    sheep_file = sheep_filepath_list[1]
-
-    sheep_name_list = sheep_file.rsplit(".", 1)
+# Selects and holds a sheep csv file from a cleaned sheep directory.
+def selectSheep():
+    global selected_sheep
+    folder_path = filedialog.askdirectory()
+    file_name = folder_path.rsplit("/", 1)[1]
     
-    if sheep_name_list[1] != 'csv':
-        messagebox.showinfo("Failure", "Please choose a .csv file")
+    try:
+        if file_name.split('_', 1)[1] == "cleaned_data":
+            sheep = os.listdir(folder_path)[0]
+            if sheep.endswith(".csv"):
+                selected_sheep = sheep
+                start_analysis_button["state"] = NORMAL
+            else:
+                messagebox.showerror("Error", "Sheep file is not a csv")
+                return
+        else:
+            messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
+            return
+    except:
+        messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
+        return
+    
+    messagebox.showinfo("Success", "Successfully selected: " + selected_sheep)
 
+
+def startAnalysis():
+    messagebox.showinfo("Success", "Analysis of " + selected_sheep + " commencing")
 
 ## Application starting point
 ## Run python3 main.py or python main.py
@@ -147,13 +161,19 @@ if __name__ == "__main__":
     root.resizable(False, False)
 
     #Root-> Frames
-    menu_frame = Frame(root, width=180, height=700, bg='#27348b')
+    menu_frame = Frame(root, width=220, height=700, bg='#27348b')
     menu_frame.grid(row=0, column=0, columnspan=2)
     menu_frame.grid_propagate(0) #stops it resizing
 
     graph_frame = Frame(root, width=620, height=700, bg='white')
     graph_frame.grid(row=0, column=2)
     graph_frame.grid_propagate(0)
+    
+    # Progress Bars
+    read_pb = ttk.Progressbar(root, style="TProgressbar")
+    clean_pb = ttk.Progressbar(root, mode="indeterminate", style="TProgressbar")
+    write_pb = ttk.Progressbar(root, mode="indeterminate", style="TProgressbar")
+
 
     #Data Processing
     Label(menu_frame,  text="Data Processing", bg='#27348b', fg='white', font="Arial 16").grid(row=0, column=0, padx=25, pady=10)
@@ -232,7 +252,7 @@ if __name__ == "__main__":
     canvas2.create_line(5, 25, 165, 25, width=0, fill='white')
     canvas2.grid(row=15, column=0)
 
-    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=10, pady=15, command=chooseSheep).grid(row=16, column=0, rowspan=2)
+    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=10, pady=15, command=selectSheep)    
     start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, padx=5, pady=15, command= lambda: startAnalysis(start_date.get_date(), end_date.get_date(), start_hours.get(), start_minutes.get(), end_hours.get(), end_minutes.get())).grid(row=18, rowspan=2, column=0)
     
     #Logo
