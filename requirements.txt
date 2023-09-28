@@ -7,3 +7,5 @@ tzdata==2023.3
 tkmacosx==1.0.5
 tkcalendar==1.6.1
 Pillow==10.0.1
+tkfilebrowser==2.3.2
+pyttk==0.3.2
