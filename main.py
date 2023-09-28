@@ -112,23 +112,24 @@ def unthreaded_clean_files(read_pb, clean_pb, write_pb, root, folder_paths):
             path_to_folder = folder_path_list[0]
             sheep_name = folder_path_list[1]
             
-            combined_data = process_data.read_data(path, read_pb, root)
-            print("Cleaning data in progress")
-            cleaned_data = process_data.start_clean_data(clean_pb, root, combined_data)
-            combined_data = [] # free memory
-            print("Completed data cleaning")
-        
-            clean_data_folder = path_to_folder+"/"+sheep_name+"_cleaned_data"
+            if len(combined_data) > 0:
+                combined_data = process_data.read_data(path, read_pb, root)
+                print("Cleaning data in progress")
+                cleaned_data = process_data.start_clean_data(clean_pb, root, combined_data)
+                combined_data = [] # free memory
+                print("Completed data cleaning")
+            
+                clean_data_folder = path_to_folder+"/"+sheep_name+"_cleaned_data"
 
-            if os.path.isdir(clean_data_folder) == False:
-                os.mkdir(clean_data_folder)
+                if os.path.isdir(clean_data_folder) == False:
+                    os.mkdir(clean_data_folder)
 
-            print("Writing to CSV in progress")
-            process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", write_pb, root)
-            print("Completed writing")
-            cleaned_data = [] # Free memory
+                print("Writing to CSV in progress")
+                process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", write_pb, root)
+                print("Completed writing")
+                cleaned_data = [] # Free memory
 
-            print(clean_data_folder)
+                print(clean_data_folder)
 
     messagebox.showinfo("Success", "Successfully cleaned selected data files")
 
