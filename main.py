@@ -9,7 +9,9 @@ from tkinter import filedialog, messagebox
 from tkmacosx import Button #for button colours since doesn't work on macOS (Tkinter issue)
 from tkcalendar import DateEntry
 from PIL import Image, ImageTk
+
 from data_cleaning.data_clean import ProcessData
+from data_analysis.plot import PlotData
 from tkfilebrowser import askopendirnames, askopenfilename
 
 # from data_cleaning.data_clean_threaded import ProcessData_Threaded
@@ -17,7 +19,6 @@ from tkfilebrowser import askopendirnames, askopenfilename
 
 clean_data_folder = None
 sheep_file = None
-selected_sheep = None
 
 global_var_lock = threading.Lock()
 
@@ -112,8 +113,8 @@ def unthreaded_clean_files(read_pb, clean_pb, write_pb, root, folder_paths):
             path_to_folder = folder_path_list[0]
             sheep_name = folder_path_list[1]
             
+            combined_data = process_data.read_data(path, read_pb, root)
             if len(combined_data) > 0:
-                combined_data = process_data.read_data(path, read_pb, root)
                 print("Cleaning data in progress")
                 cleaned_data = process_data.start_clean_data(clean_pb, root, combined_data)
                 combined_data = [] # free memory
@@ -142,15 +143,18 @@ def multithread_reset():
 
 
 def startAnalysis(start_date, end_date, start_hour, start_minute, end_hour, end_minute):
+    plot_data = PlotData()
     global sheep_file
+    
     if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
         formatted_start = str(start_date) + " " + start_hour + ":" + start_minute + ":" + "00"
         formatted_end = str(end_date) + " " + end_hour + ":" + end_minute + ":" + "00"
         print(formatted_start)
         print(formatted_end)
+        print(sheep_file)
+        
+        plot_data.start_analysis(sheep_file, formatted_start, formatted_end)
 
-        #Call analysis function here - Chantelle's function
-        #start_analysis(sheep_file, formatted_start, formatted_end)
     else:
         messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
     
@@ -162,15 +166,15 @@ def defocus(event):
 
 # Selects and holds a sheep csv file from a cleaned sheep directory.
 def selectSheep():
-    global selected_sheep
+    global sheep_file
     folder_path = filedialog.askdirectory()
-    file_name = folder_path.rsplit("/", 1)[1]
     
     try:
+        file_name = folder_path.rsplit("/", 1)[1]
         if file_name.split('_', 1)[1] == "cleaned_data":
             sheep = os.listdir(folder_path)[0]
             if sheep.endswith(".csv"):
-                selected_sheep = sheep
+                sheep_file = folder_path + "/" + sheep
                 start_analysis_button["state"] = NORMAL
             else:
                 messagebox.showerror("Error", "Sheep file is not a csv")
@@ -182,11 +186,7 @@ def selectSheep():
         messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
         return
     
-    messagebox.showinfo("Success", "Successfully selected: " + selected_sheep)
-
-
-def startAnalysis(start_date, end_date, start_hours, start_minutes, end_hours, end_minutes):
-    messagebox.showinfo("Success", "Analysis of " + selected_sheep + " commencing")
+    messagebox.showinfo("Success", "Successfully selected: " + sheep_file)
 
 ## Application starting point
 ## Run python3 main.py or python main.py

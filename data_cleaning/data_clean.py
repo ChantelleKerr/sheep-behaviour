@@ -164,9 +164,3 @@ class ProcessData():
         time.sleep(0.5)
         write_pb.destroy()
         label.destroy()
-
-
-
-
-
-    
