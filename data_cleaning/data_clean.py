@@ -46,7 +46,6 @@ class ProcessData():
                         header = df.columns.tolist()
                         if header != ['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z', 'LAT', 'LON', 'DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND']:
                             break
-
                     else:
                         df = pd.read_csv(file_path, header=None, names=header)
                     
@@ -75,10 +74,8 @@ class ProcessData():
 
         try:
             first_index_of_day_15 = df[df['DAY'] == 15].index.min()
-            print("FIRST INSTANCE OF DAY 15", first_index_of_day_15)
             # Remove all rows before that index and reset the index
             df = df.iloc[first_index_of_day_15:].reset_index(drop=True)
-            print("DROP DATA BEFORE 15th\n", df)
 
             # Extract the date values and format it for calculations
             columns_to_extract = ['DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND']
@@ -91,23 +88,19 @@ class ProcessData():
             df = df.drop(columns=['LAT', 'LON', 'DAY', 'MONTH', 'YEAR', 'HOUR', 'MINUTE', 'SECOND'])
             
             mask = np.logical_and([s.startswith('*') for s in df['ACCEL_X']], df.index % 1560 == 0)
-            print(mask)
 
             # # Calculates how many minutes since the initial date (based on the mask)
             seconds_to_add = np.zeros(len(df))
             seconds_to_add[mask] = np.arange(0, mask.sum()) * 60
-            print("SECONDS TO ADD\n", seconds_to_add)
 
             # Calculates a new date from the initial date for every minute
             df['DATE'] = None
             df.loc[mask, 'DATE'] = datetime_obj + pd.to_timedelta(seconds_to_add[mask], unit='s')
             df['DATE'] = df['DATE'].shift(1)
-            print("Date column added\n", df)
 
             # Remove -2048,-2048,-2048 and shift the date one index before removing
             mask = (df['ACCEL_X'] == '-2048') & (df['ACCEL_Y'] == -2048) & (df['ACCEL_Z'] == -2048)
             mask_indices = df.index[mask]
-            print("Rows with -2048\n", mask_indices)
             if not mask_indices.empty:
                 next_index = mask_indices + 1
                 df.loc[next_index, 'DATE'] = df.loc[mask_indices, 'DATE'].values
@@ -120,7 +113,6 @@ class ProcessData():
             combined_mask = mask | mask2 | mask3
             df = df[~combined_mask]
 
-            print("FINAL RESULT\n", df)
 
             df_queue.put(df)
 
