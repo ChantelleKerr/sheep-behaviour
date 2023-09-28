@@ -53,7 +53,6 @@ class ProcessData():
 
                     if len(rows_with_day_15) > 0:
                         found_day_15 = True
-                        break
                     
                     if found_day_15:
                         dfs.append(df)
