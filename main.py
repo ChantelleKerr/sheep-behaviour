@@ -43,25 +43,27 @@ def cleanFiles(read_pb, clean_pb, write_pb, window):
 
     combined_data = process_data.read_data(folder_path, read_pb, window)
 
-    print("Cleaning data in progress")
-    cleaned_data = process_data.start_clean_data(clean_pb, window, combined_data)
-    combined_data = [] # free memory
-    print("Completed data cleaning")
+    # Only start cleaning process if we have data
+    if len(combined_data) > 0:
+        print("Cleaning data in progress")
+        cleaned_data = process_data.start_clean_data(clean_pb, window, combined_data)
+        combined_data = [] # free memory
+        print("Completed data cleaning")
 
-    clean_data_folder = path_to_folder+"/cleaned_data"
+        clean_data_folder = path_to_folder+"/cleaned_data"
 
-    if os.path.isdir(clean_data_folder) == False:
-        os.mkdir(clean_data_folder)
+        if os.path.isdir(clean_data_folder) == False:
+            os.mkdir(clean_data_folder)
 
-    print("Writing to CSV in progress")
-    process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", write_pb, window)
-    print("Completed writing")
-    cleaned_data = [] # Free memory
+        print("Writing to CSV in progress")
+        process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", write_pb, window)
+        print("Completed writing")
+        cleaned_data = [] # Free memory
 
-    print(clean_data_folder)
+        print(clean_data_folder)
 
-    messagebox.showinfo("Success", "Successfully cleaned selected data files")
-    webbrowser.open('file:///'+clean_data_folder)
+        messagebox.showinfo("Success", "Successfully cleaned selected data files")
+        webbrowser.open('file:///'+clean_data_folder)
 
 ## Application starting point
 ## Run python3 main.py or python main.py
