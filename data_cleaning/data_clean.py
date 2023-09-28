@@ -35,25 +35,25 @@ class ProcessData():
             if file.endswith('.txt'):
                 print(f'Processing: {file}')
                 file_path = os.path.join(folder_path, file)
+                if os.path.getsize(file_path) > 0:
+                    if (idx < MAX_EXPERIMENT_DAYS):
+                        read_pb['value'] += increment
+                        window.update()
 
-                if (idx < MAX_EXPERIMENT_DAYS):
-                    read_pb['value'] += increment
-                    window.update()
+                    if header is None:
+                        df = pd.read_csv(file_path)
+                        header = df.columns.tolist()
+                    else:
+                        df = pd.read_csv(file_path, header=None, names=header)
+                    
+                    rows_with_day_15 = df[df['DAY'] == 15]
 
-                if header is None:
-                    df = pd.read_csv(file_path)
-                    header = df.columns.tolist()
-                else:
-                    df = pd.read_csv(file_path, header=None, names=header)
-                
-                rows_with_day_15 = df[df['DAY'] == 15]
-
-                if len(rows_with_day_15) > 0:
-                    found_day_15 = True
-                
-                if found_day_15:
-                    dfs.append(df)
-                    day_counter += 1
+                    if len(rows_with_day_15) > 0:
+                        found_day_15 = True
+                    
+                    if found_day_15:
+                        dfs.append(df)
+                        day_counter += 1
 
         read_pb.place_forget()  
         label.place_forget()
