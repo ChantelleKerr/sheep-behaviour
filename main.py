@@ -5,7 +5,7 @@ import ttk
 from tkinter import *
 import threading
 from queue import Queue
-from tkinter import messagebox
+from tkinter import filedialog, messagebox
 from tkmacosx import Button #for button colours since doesn't work on macOS (Tkinter issue)
 from tkcalendar import DateEntry
 from PIL import Image, ImageTk
@@ -17,8 +17,10 @@ from tkfilebrowser import askopendirnames, askopenfilename
 
 clean_data_folder = None
 sheep_file = None
+selected_sheep = None
 
 global_var_lock = threading.Lock()
+
 
 def getFolders(folder_paths):
     folder_paths.append(askopendirnames())
@@ -40,6 +42,7 @@ def getFolders(folder_paths):
         load_files_button["state"] = DISABLED
         clean_files_button["state"] = NORMAL
     return folder_paths
+
 
 # MULTITHREADED: Batch Cleaning
 def clean_files_thread(folder_path):
@@ -71,6 +74,7 @@ def clean_files_thread(folder_path):
     # Release the lock after modifying the array
         global_var_lock.release()
 
+
 def cleanFiles(folder_paths):
     global clean_data_folder
 
@@ -98,11 +102,43 @@ def cleanFiles(folder_paths):
     webbrowser.open('file:///'+ clean_data_folder)
     multithread_reset()
 
+
+def unthreaded_clean_files(read_pb, clean_pb, write_pb, root, folder_paths):
+    process_data = ProcessData()
+    
+    for tuple in folder_paths:
+        for path in tuple:
+            folder_path_list = path.rsplit("\\", 1)
+            path_to_folder = folder_path_list[0]
+            sheep_name = folder_path_list[1]
+            
+            combined_data = process_data.read_data(path, read_pb, root)
+            print("Cleaning data in progress")
+            cleaned_data = process_data.start_clean_data(clean_pb, root, combined_data)
+            combined_data = [] # free memory
+            print("Completed data cleaning")
+        
+            clean_data_folder = path_to_folder+"/"+sheep_name+"_cleaned_data"
+
+            if os.path.isdir(clean_data_folder) == False:
+                os.mkdir(clean_data_folder)
+
+            print("Writing to CSV in progress")
+            process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", write_pb, root)
+            print("Completed writing")
+            cleaned_data = [] # Free memory
+
+            print(clean_data_folder)
+
+    messagebox.showinfo("Success", "Successfully cleaned selected data files")
+
+
 def multithread_reset():
     global folder_paths
     folder_paths = [] # FREE THREADING FILE PATHS
     load_files_button["state"] = NORMAL
     clean_files_button["state"] = DISABLED
+
 
 def startAnalysis(start_date, end_date, start_hour, start_minute, end_hour, end_minute):
     global sheep_file
@@ -117,9 +153,11 @@ def startAnalysis(start_date, end_date, start_hour, start_minute, end_hour, end_
     else:
         messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
     
+
 def defocus(event):
     event.widget.master.focus_set()
     event.widget.master.selection_clear()
+
 
 # Selects and holds a sheep csv file from a cleaned sheep directory.
 def selectSheep():
@@ -146,7 +184,7 @@ def selectSheep():
     messagebox.showinfo("Success", "Successfully selected: " + selected_sheep)
 
 
-def startAnalysis():
+def startAnalysis(start_date, end_date, start_hours, start_minutes, end_hours, end_minutes):
     messagebox.showinfo("Success", "Analysis of " + selected_sheep + " commencing")
 
 ## Application starting point
@@ -178,7 +216,7 @@ if __name__ == "__main__":
     #Data Processing
     Label(menu_frame,  text="Data Processing", bg='#27348b', fg='white', font="Arial 16").grid(row=0, column=0, padx=25, pady=10)
     load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=5, pady=15, command = lambda: getFolders(folder_paths))
-    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: cleanFiles(folder_paths))
+    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: unthreaded_clean_files(read_pb, clean_pb, write_pb, root, folder_paths))
     load_files_button.grid(row=1, column=0, rowspan=2)
     clean_files_button.grid(row=3, rowspan=2, column=0)
     
@@ -253,7 +291,9 @@ if __name__ == "__main__":
     canvas2.grid(row=15, column=0)
 
     select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=10, pady=15, command=selectSheep)    
-    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, padx=5, pady=15, command= lambda: startAnalysis(start_date.get_date(), end_date.get_date(), start_hours.get(), start_minutes.get(), end_hours.get(), end_minutes.get())).grid(row=18, rowspan=2, column=0)
+    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=5, pady=15, command= lambda: startAnalysis(start_date.get_date(), end_date.get_date(), start_hours.get(), start_minutes.get(), end_hours.get(), end_minutes.get()))
+    select_sheep_button.grid(row=16, column=0, rowspan=2)
+    start_analysis_button.grid(row=18, rowspan=2, column=0)
     
     #Logo
     uwa_logo = Image.open("./UWA-logo-1.png")
