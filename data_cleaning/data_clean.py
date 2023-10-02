@@ -25,8 +25,8 @@ class ProcessData():
         increment = 100 / num_files
         
         label = Label(window, text="Reading: ", font=("Helvetica", 16)) 
-        label.place(x=120, y=10)
-        read_pb.place(x=120, y=40, width=200)
+        label.place(relx=.5, rely=.5, x=100, y=-30, anchor=CENTER)
+        read_pb.place(relx=.5, rely=.5, x=100, anchor=CENTER, width=200)
 
         for idx, file in enumerate(file_names):
             # We only want to process 34 days worth of files
@@ -65,7 +65,7 @@ class ProcessData():
             label.place_forget()
             combined_df = pd.concat(dfs, ignore_index=True)
         except:
-            print("Error: Invalid files in directory")
+            print("Error: Not enough memory on disk or invalid files in directory")
         return combined_df
     
 
@@ -123,8 +123,8 @@ class ProcessData():
         df_queue = queue.Queue()
 
         label = Label(window, text="Cleaning: ", font=("Helvetica", 16)) 
-        label.place(x=120, y=10)        
-        clean_pb.place(x=120, y=40, width=200)
+        label.place(relx=.5, rely=.5, x=100, y=-30, anchor=CENTER)        
+        clean_pb.place(relx=.5, rely=.5, x=100, anchor=CENTER, width=200)
 
         clean_pb.start()
 
@@ -151,8 +151,8 @@ class ProcessData():
     def start_save_to_csv(self, cleaned_data, path, write_pb, window):
 
         label = Label(window, text="Writing to CSV: ", font=("Helvetica", 16)) 
-        label.place(x=120, y=10)        
-        write_pb.place(x=120, y=40, width=200)
+        label.place(relx=.5, rely=.5, x=100, y=-30, anchor=CENTER)        
+        write_pb.place(relx=.5, rely=.5, x=100, anchor=CENTER, width=200)
 
         write_pb.start()
 
@@ -165,9 +165,3 @@ class ProcessData():
         time.sleep(0.5)
         write_pb.destroy()
         label.destroy()
-
-
-
-
-
-    
