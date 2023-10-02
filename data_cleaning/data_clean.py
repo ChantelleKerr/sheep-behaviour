@@ -9,6 +9,7 @@ from tkinter import ttk
 import numpy as np
 import pandas as pd
 
+
 class ProcessData():
     def read_data(self, folder_path, read_pb, window):
         dfs = []
@@ -64,7 +65,7 @@ class ProcessData():
             label.place_forget()
             combined_df = pd.concat(dfs, ignore_index=True)
         except:
-            print("Error: Invalid files in directory")
+            print("Error: Not enough memory on disk or invalid files in directory")
         return combined_df
     
 

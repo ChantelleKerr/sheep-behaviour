@@ -1,18 +1,20 @@
 import os
+import threading
 import time
 import webbrowser
-import ttk
-from tkinter import *
-import threading
 from queue import Queue
-from tkinter import filedialog, messagebox
-from tkmacosx import Button #for button colours since doesn't work on macOS (Tkinter issue)
-from tkcalendar import DateEntry
-from PIL import Image, ImageTk
+from tkinter import *
+from tkinter import filedialog, messagebox, ttk
 
-from data_cleaning.data_clean import ProcessData
-from data_analysis.plot import PlotData
+from PIL import Image, ImageTk
+from tkcalendar import DateEntry
 from tkfilebrowser import askopendirnames, askopenfilename
+from tkmacosx import (
+    Button,  # for button colours since doesn't work on macOS (Tkinter issue)
+)
+
+from data_analysis.plot import PlotData
+from data_cleaning.data_clean import ProcessData
 
 # from data_cleaning.data_clean_threaded import ProcessData_Threaded
 # from data_analysis.plot import start_analysis
@@ -24,7 +26,7 @@ global_var_lock = threading.Lock()
 
 
 def getFolders(folder_paths):
-    folder_paths.append(askopendirnames())
+    folder_paths.append(askopendirnames(title="Select Directory"))
     changeMode("data cleaning")
     files = []
     
@@ -339,11 +341,11 @@ if __name__ == "__main__":
     l1.grid(column=0, pady=(50, 0))
 
     #Graph labels and buttons
-    Label(graph_frame,  text="Current File(s)", fg='#27348b', font="Arial 12 bold").grid(sticky=W, padx=(10), pady=(10, 5), rowspan=2)
-    currentFile = Label(graph_frame,  text="N/A", fg='black', font="Arial 12")
+    Label(graph_frame,  text="Current File(s)", fg='#27348b',bg='white', font="Arial 12 bold").grid(sticky=W, padx=(10), pady=(10, 5), rowspan=2)
+    currentFile = Label(graph_frame,  text="N/A", fg='black', bg='white', font="Arial 12")
     currentFile.grid(sticky = W, row=0, column=1, rowspan=2)
-    Label(graph_frame,  text="Current Mode", fg='#27348b', font="Arial 12 bold").grid(sticky = W, row=3, column=0, padx=(10))
-    currentMode = Label(graph_frame,  text="N/A", fg='black', font="Arial 12")
+    Label(graph_frame,  text="Current Mode", fg='#27348b', bg="white", font="Arial 12 bold").grid(sticky = W, row=3, column=0, padx=(10))
+    currentMode = Label(graph_frame,  text="N/A", fg='black', bg="white", font="Arial 12")
     currentMode.grid(sticky = W, row=3, column=1, rowspan=2)
 
     export_pdf_button = Button(graph_frame, text="EXPORT TO PDF", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10)
