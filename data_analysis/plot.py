@@ -3,10 +3,14 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.widgets import Slider
+import os
+import csv
 
 
 class PlotData():
+    def __init__(self):
+        self.data = []
+
     def find_start_and_end_data(self, data_file, start_date, end_date):
         """
         Finds the rows nearest to start and end dates and return the data inbetween those dates.
@@ -114,14 +118,48 @@ class PlotData():
         data_file, start_date, end_date should be passed as valid inputs
         '''
         
-        data = self.find_start_and_end_data(data_file, start_date, end_date)
-        avg_hertz = self.get_average_hertz_per_second(data)
-        data = self.calculate_dates(data, avg_hertz)
+        self.data = self.find_start_and_end_data(data_file, start_date, end_date)
+        avg_hertz = self.get_average_hertz_per_second(self.data)
+        data = self.calculate_dates(self.data, avg_hertz)
         self.plot(data)
+        # TODO: Add button to call this instead
+        self.calculate_stats(data_file, start_date, end_date)
+
+    def calculate_stats(self, folder_path, start_date, end_date):
+        first_date = self.data['DATE'].iloc[0]
+        last_date = self.data['DATE'].iloc[-1]
+        self.data = self.data.drop(columns=['DATE'])
+
+        mean_values = self.data.mean().round(2)
+        mode_values = self.data.mode().iloc[0].round(2)  # Use .iloc[0] (might have multiple modes)
+        median_values = self.data.median().round(2)
+        std_values = self.data.std().round(2)
+
+        stat_folder = os.path.dirname(folder_path)
+        file = os.path.basename(folder_path)
+
+        output_file = stat_folder + "/stats.csv"
+        file_exists = os.path.exists(output_file)
+
+        with open(output_file, mode='a', newline='') as f:
+            writer = csv.writer(f)
+            
+            if not file_exists:
+                writer.writerow(['SHEEP', 'START DATE', 'END DATE', 'ACCEL_X_MEAN', 'ACCEL_X_MODE', 'ACCEL_X_MEDIAN', 'ACCEL_X_STD',
+                                 'ACCEL_Y_MEAN', 'ACCEL_Y_MODE', 'ACCEL_Y_MEDIAN', 'ACCEL_Y_STD',
+                                 'ACCEL_Z_MEAN', 'ACCEL_Z_MODE', 'ACCEL_Z_MEDIAN', 'ACCEL_Z_STD'])
+            
+            writer.writerow([file, first_date, last_date,
+                             mean_values['ACCEL_X'], mode_values['ACCEL_X'], median_values['ACCEL_X'], std_values['ACCEL_X'],
+                             mean_values['ACCEL_Y'], mode_values['ACCEL_Y'], median_values['ACCEL_Y'], std_values['ACCEL_Y'],
+                             mean_values['ACCEL_Z'], mode_values['ACCEL_Z'], median_values['ACCEL_Z'], std_values['ACCEL_Z']])
+
 
 
 # TODO: Remove hard coded data 
-# start_date = '2023-02-16 13:05:35'
-# end_date = '2023-02-16 13:10:00'
-# data_file = 'test_data/cleaned_data/GPS0028.csv'
-# start_analysis(data_file, start_date, end_date)
+start_date = '2023-02-16 13:05:35'
+end_date = '2023-02-16 13:10:00'
+data_file = 'test_data/GPS0028.csv'
+p = PlotData()
+p.start_analysis(data_file, start_date, end_date)
+
