@@ -171,20 +171,15 @@ def defocus(event):
 # Selects and holds a sheep csv file from a cleaned sheep directory.
 def selectSheep():
     global sheep_file
-    folder_path = filedialog.askdirectory()
+    file_path = askopenfilename(title="Select a cleaned data file", filetypes=[("CSV files", "*.csv")]) # filedialog.askdirectory()
     changeMode("data analysis")
     
     try:
-        file_name = folder_path.rsplit("/", 1)[1]
-        if file_name.split('_', 1)[1] == "cleaned_data":
-            sheep = os.listdir(folder_path)[0]
-            if sheep.endswith(".csv"):
-                sheep_file = folder_path + "/" + sheep
-                start_analysis_button["state"] = NORMAL
-                changeFile([file_name]) # Changes the file name display
-            else:
-                messagebox.showerror("Error", "Sheep file is not a csv")
-                return
+        file_name = os.path.basename(file_path)
+        if file_name.startswith("GPS"):
+            sheep_file = file_path
+            start_analysis_button["state"] = NORMAL
+            changeFile([file_name]) # Changes the file name display
         else:
             messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
             return
@@ -257,9 +252,9 @@ if __name__ == "__main__":
     #write_pb.place(rely=0.5, relx=0.5, anchor=CENTER)
 
     #Data Processing
-    Label(menu_frame,  text="Data Processing", bg='#27348b', fg='white', font="Arial 18").grid(row=0, column=0, padx=20, pady=10)
-    load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=5, pady=15, command = lambda: getFolders(folder_paths))
-    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: unthreaded_clean_files(read_pb, clean_pb, write_pb, root, folder_paths))
+    Label(menu_frame,  text="Data Processing", bg='#27348b', fg='white', font="Arial 16").grid(row=0, column=0, padx=20, pady=10)
+    load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 12 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=5, pady=15, command = lambda: getFolders(folder_paths))
+    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 12 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: unthreaded_clean_files(read_pb, clean_pb, write_pb, root, folder_paths))
     load_files_button.grid(row=1, column=0, rowspan=2)
     clean_files_button.grid(row=3, rowspan=2, column=0)
     
@@ -330,8 +325,8 @@ if __name__ == "__main__":
     canvas2.create_line(5, 25, 165, 25, width=0, fill='white')
     canvas2.grid(row=15, column=0)
 
-    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 14 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=15, pady=15, command=selectSheep)    
-    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 14 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=7, pady=15, command= lambda: startAnalysis(start_date.get_date(), end_date.get_date(), start_hours.get(), start_minutes.get(), end_hours.get(), end_minutes.get()))
+    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 12 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=15, pady=15, command=selectSheep)    
+    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 12 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=7, pady=15, command= lambda: startAnalysis(start_date.get_date(), end_date.get_date(), start_hours.get(), start_minutes.get(), end_hours.get(), end_minutes.get()))
     select_sheep_button.grid(row=16, column=0, rowspan=2)
     start_analysis_button.grid(row=18, rowspan=2, column=0)
     
@@ -351,8 +346,8 @@ if __name__ == "__main__":
     currentMode = Label(graph_frame,  text="N/A", fg='black', font="Arial 12")
     currentMode.grid(sticky = W, row=3, column=1, rowspan=2)
 
-    export_pdf_button = Button(graph_frame, text="EXPORT TO PDF", font="Arial 12", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10)
-    generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 12", background='#fdc300', activebackground='#a2c03b', focuscolor='', borderless=True, padx=0, pady=10)
+    export_pdf_button = Button(graph_frame, text="EXPORT TO PDF", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10)
+    generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 10", background='#fdc300', activebackground='#a2c03b', focuscolor='', borderless=True, padx=0, pady=10)
     export_pdf_button.place(rely=1.0, relx=1.0, x=-250, y=-30, anchor=SE)
     generate_report_button.place(rely=1.0, relx=1.0, x=-70, y=-30, anchor=SE)
 
