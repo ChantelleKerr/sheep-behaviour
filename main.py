@@ -250,9 +250,11 @@ if __name__ == "__main__":
     
     # Progress Bars
     read_pb = ttk.Progressbar(root, style="TProgressbar")
+    #read_pb.place(rely=0.5, relx=0.5, anchor=CENTER)
     clean_pb = ttk.Progressbar(root, mode="indeterminate", style="TProgressbar")
+    #clean_pb.place(rely=0.5, relx=0.5, anchor=CENTER)
     write_pb = ttk.Progressbar(root, mode="indeterminate", style="TProgressbar")
-
+    #write_pb.place(rely=0.5, relx=0.5, anchor=CENTER)
 
     #Data Processing
     Label(menu_frame,  text="Data Processing", bg='#27348b', fg='white', font="Arial 18").grid(row=0, column=0, padx=20, pady=10)
