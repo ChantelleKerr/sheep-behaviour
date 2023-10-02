@@ -14,7 +14,7 @@ from tkmacosx import (
 )
 
 from data_analysis.plot import PlotData
-from data_cleaning.data_clean import ProcessData
+from data_cleaning.data_clean import ProcessData, ProcessData_Threaded
 
 # from data_cleaning.data_clean_threaded import ProcessData_Threaded
 # from data_analysis.plot import start_analysis
@@ -22,19 +22,22 @@ from data_cleaning.data_clean import ProcessData
 clean_data_folder = None
 sheep_file = None
 
-global_var_lock = threading.Lock()
-
 
 def getFolders(folder_paths):
+    
+    # Allows button re-usability (Instead of forcing to clean/restart to reselect directories)
+    folder_paths.clear()
+
     folder_paths.append(askopendirnames(title="Select Directory"))
     changeMode("data cleaning")
     files = []
     
+    print("DEBUG TOTAL SELECTED: " + str(folder_paths))
     for tuple in folder_paths:
         for folder_path in tuple:
             files_in_folder = os.listdir(folder_path)
-            print("Files in Folder:")
-            print(files_in_folder)
+            # print("Files in Folder:")
+            # print(files_in_folder)
 
             #Checking that selected folders contain more than 1 file 
             if len(files_in_folder) <= 1:
@@ -46,40 +49,41 @@ def getFolders(folder_paths):
     changeFile(files)
     
     if len(folder_paths) == 1 and folder_paths[0] != ():
-        load_files_button["state"] = DISABLED
+        # load_files_button["state"] = DISABLED
         clean_files_button["state"] = NORMAL
     return folder_paths
 
 
 # MULTITHREADED: Batch Cleaning
 def clean_files_thread(folder_path):
-    global_var_lock.acquire()
-    global clean_data_folder
-    try:
-        # process_data = ProcessData_Threaded()
-        # combined_data = process_data.read_data(folder_path)
 
-        #Get sheep name for clean file name
-        folder_path_list = folder_path.rsplit("/", 1)
-        path_to_folder = folder_path_list[0]
-        sheep_name = folder_path_list[1]
+    process_data = ProcessData_Threaded()
+    combined_data = process_data.read_data(folder_path)
 
-        print("Currently cleaning folder: "+sheep_name)
-        # cleaned_data = process_data.start_clean_data(combined_data)
-        combined_data = []  # Free memory
-        print("Completed cleaning for folder "+sheep_name)
+    #Get sheep name for clean file name
+    folder_path_list = folder_path.rsplit("\\", 1)
+    path_to_folder = folder_path_list[0]
+    sheep_name = folder_path_list[1]
 
-        clean_data_folder = path_to_folder + "/cleaned_data_batch"
-        if not os.path.isdir(clean_data_folder):
-            os.mkdir(clean_data_folder)
+    print("Cleaning data in progress")
+    cleaned_data = process_data.start_clean_data(combined_data)
+    combined_data = []  # Free memory
+    print("Completed data cleaning")
 
-        print("Currently writing CSV for folder: "+sheep_name)
-        # process_data.start_save_to_csv(cleaned_data, clean_data_folder + "/" + sheep_name + ".csv")
-        print("Completed writing CSV for folder: "+sheep_name)
-        cleaned_data = []  # Free memory
-    finally:
-    # Release the lock after modifying the array
-        global_var_lock.release()
+    clean_data_folder = path_to_folder + "/cleaned_data_batch"
+    
+    global path_to_cleaned_data_batch
+    path_to_cleaned_data_batch = clean_data_folder
+
+    if not os.path.isdir(clean_data_folder):
+        os.mkdir(clean_data_folder)
+
+    print("Writing to CSV in progress")
+    process_data.start_save_to_csv(cleaned_data, clean_data_folder + "/" + sheep_name + ".csv")
+    print("Completed writing")
+    cleaned_data = []  # Free memory
+    print(clean_data_folder)
+    
 
 
 def cleanFiles(folder_paths):
@@ -92,7 +96,9 @@ def cleanFiles(folder_paths):
     start_time = time.time()
 
     for tuple in folder_paths:
+        print("DEBUG TUPLE: " + str(tuple))
         for folder_path in tuple:
+            print("DEBUG FOLDER_PATH: " + str(folder_path))
             thread = threading.Thread(target=clean_files_thread, args=(folder_path,))
             threads.append(thread)
             thread.start()
@@ -106,7 +112,7 @@ def cleanFiles(folder_paths):
 
     messagebox.showinfo("Success", "Successfully cleaned selected data folders.")
     print(clean_data_folder)
-    webbrowser.open('file:///'+ clean_data_folder)
+    webbrowser.open(path_to_cleaned_data_batch)
     multithread_reset()
 
 
@@ -138,6 +144,7 @@ def unthreaded_clean_files(read_pb, clean_pb, write_pb, root, folder_paths):
 
                 print(clean_data_folder)
 
+    webbrowser.open(path_to_folder)
     messagebox.showinfo("Success", "Successfully cleaned selected data files")
 
 
@@ -256,7 +263,7 @@ if __name__ == "__main__":
     #Data Processing
     Label(menu_frame,  text="Data Processing", bg='#27348b', fg='white', font="Arial 16").grid(row=0, column=0, padx=20, pady=10)
     load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 12 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=5, pady=15, command = lambda: getFolders(folder_paths))
-    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 12 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: unthreaded_clean_files(read_pb, clean_pb, write_pb, root, folder_paths))
+    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 12 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda:cleanFiles(folder_paths))
     load_files_button.grid(row=1, column=0, rowspan=2)
     clean_files_button.grid(row=3, rowspan=2, column=0)
     
