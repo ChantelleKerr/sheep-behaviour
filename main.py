@@ -25,7 +25,9 @@ global_var_lock = threading.Lock()
 
 def getFolders(folder_paths):
     folder_paths.append(askopendirnames())
-
+    changeMode("data cleaning")
+    files = []
+    
     for tuple in folder_paths:
         for folder_path in tuple:
             files_in_folder = os.listdir(folder_path)
@@ -37,6 +39,9 @@ def getFolders(folder_paths):
                 messagebox.showerror("Error", "Folder: "+folder_path+" contains less than 2 files. Please select a folder which contains more than one data file.")
                 folder_paths.pop()
                 break
+            
+            files.append(folder_path.rsplit("\\", 1)[1])
+    changeFile(files)
     
     if len(folder_paths) == 1 and folder_paths[0] != ():
         load_files_button["state"] = DISABLED
@@ -167,6 +172,7 @@ def defocus(event):
 def selectSheep():
     global sheep_file
     folder_path = filedialog.askdirectory()
+    changeMode("data analysis")
     
     try:
         file_name = folder_path.rsplit("/", 1)[1]
@@ -175,6 +181,7 @@ def selectSheep():
             if sheep.endswith(".csv"):
                 sheep_file = folder_path + "/" + sheep
                 start_analysis_button["state"] = NORMAL
+                changeFile([file_name]) # Changes the file name display
             else:
                 messagebox.showerror("Error", "Sheep file is not a csv")
                 return
@@ -182,10 +189,44 @@ def selectSheep():
             messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
             return
     except:
-        messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
         return
+
+
+# Updates the intereior content of the current file label.
+def changeFile(filenames):
+    l = len(filenames)
+    if l == 0:
+        currentFile.config(text="N/A")
+    elif l == 1:
+        currentFile.config(text=filenames[0])
+    elif l > 1 and l < 6:
+        s = "["
+        for file in filenames:
+            s += f"{file}, " 
+        s = f"{s[:-2]}]"
+        currentFile.config(text=s)
+    elif l > 5:
+        s = "["
+        
+        i = 0
+        while i < 5:
+            s += f"{filenames[i]}, "
+            i +=1
+            
+        s = f"{s}...] + ({l-5}) more."
+        currentFile.config(text=s)
+    else:
+        currentFile.config(text="N/A")
+        print("Error: invalid filenames")
+
+
+# Updates the interior content of the current mode label.
+def changeMode(mode):
+    modes = ["data cleaning", "data analysis"]
     
-    messagebox.showinfo("Success", "Successfully selected: " + sheep_file)
+    if mode.lower() in modes:
+        currentMode.config(text=mode.title())
+
 
 ## Application starting point
 ## Run python3 main.py or python main.py
@@ -301,10 +342,12 @@ if __name__ == "__main__":
     l1.grid(column=0, pady=(50, 0))
 
     #Graph labels and buttons
-    Label(graph_frame,  text="Current Directory", fg='#27348b', font="Arial 12 bold").grid(sticky=W, padx=(10), pady=(10, 5), rowspan=2)
-    Label(graph_frame,  text="", fg='black', font="Arial 12").grid(sticky = W, row=0, column=1,rowspan=2)
+    Label(graph_frame,  text="Current File(s)", fg='#27348b', font="Arial 12 bold").grid(sticky=W, padx=(10), pady=(10, 5), rowspan=2)
+    currentFile = Label(graph_frame,  text="N/A", fg='black', font="Arial 12")
+    currentFile.grid(sticky = W, row=0, column=1, rowspan=2)
     Label(graph_frame,  text="Current Mode", fg='#27348b', font="Arial 12 bold").grid(sticky = W, row=3, column=0, padx=(10))
-    Label(graph_frame,  text="", fg='black', font="Arial 12").grid(sticky = W, row=3, column=1, padx=2, rowspan=2)
+    currentMode = Label(graph_frame,  text="N/A", fg='black', font="Arial 12")
+    currentMode.grid(sticky = W, row=3, column=1, rowspan=2)
 
     export_pdf_button = Button(graph_frame, text="EXPORT TO PDF", font="Arial 12", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10)
     generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 12", background='#fdc300', activebackground='#a2c03b', focuscolor='', borderless=True, padx=0, pady=10)
