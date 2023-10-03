@@ -1,4 +1,5 @@
 import os
+import sys
 import threading
 import time
 import webbrowser
@@ -23,6 +24,23 @@ clean_data_folder = None
 sheep_file = None
 
 global_var_lock = threading.Lock()
+
+# New function for the compiled program
+def resource_path(relative_path):
+    """Get the correct resource path for PyInstaller"""
+    if getattr(sys, 'frozen', False):  # The application is frozen (compiled)
+        base_path = sys._MEIPASS
+    else:  # Running in a normal Python environment
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+def app_root_path():
+    """Get the root path of the application (script or packaged executable)"""
+    if getattr(sys, 'frozen', False):  # The application is frozen (compiled)
+        return os.path.dirname(sys.executable)
+    else:  # Running in a normal Python environment
+        return os.path.dirname(os.path.abspath(__file__))
+# New function for the compiled program
 
 
 def getFolders(folder_paths):
@@ -333,7 +351,12 @@ if __name__ == "__main__":
     start_analysis_button.grid(row=18, rowspan=2, column=0)
     
     #Logo
-    uwa_logo = Image.open("./UWA-logo-1.png")
+    
+    # uwa_logo = Image.open("./UWA-logo-1.png")
+    # Change for the compiled program use
+    uwa_logo_path = resource_path("UWA-logo-1.png")
+    uwa_logo = Image.open(uwa_logo_path)
+
     img_resized=uwa_logo.resize((220,80)) # new width & height
     my_img=ImageTk.PhotoImage(img_resized)
 
