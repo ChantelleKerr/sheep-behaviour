@@ -1,4 +1,5 @@
 import os
+import platform
 import sys
 import threading
 import time
@@ -22,8 +23,10 @@ from data_cleaning.data_clean import ProcessData
 
 clean_data_folder = None
 sheep_file = None
+system = platform.system()
 
 global_var_lock = threading.Lock()
+
 
 # New function for the compiled program
 def resource_path(relative_path):
@@ -60,7 +63,10 @@ def getFolders(folder_paths):
                 folder_paths.pop()
                 break
             
-            files.append(folder_path.rsplit("\\", 1)[1])
+            if system == "Darwin":
+                files.append(folder_path.rsplit("/", 1))
+            if system == "Windows":
+                files.append(folder_path.rsplit("\\", 1)[1])
     changeFile(files)
     
     if len(folder_paths) == 1 and folder_paths[0] != ():
@@ -78,6 +84,7 @@ def clean_files_thread(folder_path):
         # combined_data = process_data.read_data(folder_path)
 
         #Get sheep name for clean file name
+
         folder_path_list = folder_path.rsplit("/", 1)
         path_to_folder = folder_path_list[0]
         sheep_name = folder_path_list[1]
@@ -128,19 +135,23 @@ def cleanFiles(folder_paths):
     multithread_reset()
 
 
-def unthreaded_clean_files(read_pb, clean_pb, write_pb, root, folder_paths):
+def unthreaded_clean_files(root, folder_paths):
     process_data = ProcessData()
     
     for tuple in folder_paths:
         for path in tuple:
-            folder_path_list = path.rsplit("\\", 1)
+            if system == "Darwin":
+                folder_path_list = path.rsplit("/", 1)
+            if system == "Windows":
+                folder_path_list = path.rsplit("\\", 1)
+
             path_to_folder = folder_path_list[0]
             sheep_name = folder_path_list[1]
             
-            combined_data = process_data.read_data(path, read_pb, root)
+            combined_data = process_data.start_read_data(path, root)
             if len(combined_data) > 0:
                 print("Cleaning data in progress")
-                cleaned_data = process_data.start_clean_data(clean_pb, root, combined_data)
+                cleaned_data = process_data.start_clean_data(root, combined_data)
                 combined_data = [] # free memory
                 print("Completed data cleaning")
             
@@ -150,10 +161,9 @@ def unthreaded_clean_files(read_pb, clean_pb, write_pb, root, folder_paths):
                     os.mkdir(clean_data_folder)
 
                 print("Writing to CSV in progress")
-                process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", write_pb, root)
+                process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", root)
                 print("Completed writing")
                 cleaned_data = [] # Free memory
-
                 print(clean_data_folder)
 
     messagebox.showinfo("Success", "Successfully cleaned selected data files")
@@ -262,19 +272,11 @@ if __name__ == "__main__":
     graph_frame = Frame(root, width=620, height=700, bg='white')
     graph_frame.grid(row=0, column=2)
     graph_frame.grid_propagate(0)
-    
-    # Progress Bars
-    read_pb = ttk.Progressbar(root, style="TProgressbar")
-    #read_pb.place(rely=0.5, relx=0.5, anchor=CENTER)
-    clean_pb = ttk.Progressbar(root, mode="indeterminate", style="TProgressbar")
-    #clean_pb.place(rely=0.5, relx=0.5, anchor=CENTER)
-    write_pb = ttk.Progressbar(root, mode="indeterminate", style="TProgressbar")
-    #write_pb.place(rely=0.5, relx=0.5, anchor=CENTER)
 
     #Data Processing
     Label(menu_frame,  text="Data Processing", bg='#27348b', fg='white', font="Arial 16").grid(row=0, column=0, padx=20, pady=10)
     load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 12 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=5, pady=15, command = lambda: getFolders(folder_paths))
-    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 12 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: unthreaded_clean_files(read_pb, clean_pb, write_pb, root, folder_paths))
+    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 12 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: unthreaded_clean_files(root, folder_paths))
     load_files_button.grid(row=1, column=0, rowspan=2)
     clean_files_button.grid(row=3, rowspan=2, column=0)
     
@@ -284,7 +286,7 @@ if __name__ == "__main__":
     canvas.grid(row=5, column=0)
 
     #Data Analysis
-    Label(menu_frame,  text="Data Analysis", bg='#27348b', fg='white', font="Arial 16").grid(row=6, column=0, padx=25, pady=5)
+    Label(menu_frame,  text="Data Analysis", bg='#27348b', fg='white', font="Arial 16", justify="left").grid(row=6, column=0, pady=5)
     
     Label(menu_frame,  text="Start Date:", bg='#27348b', justify="left", anchor="w", fg='white', font="Arial 12").grid(sticky = W, row=7, column=0)
     start_date = DateEntry(menu_frame, background='#27348b', selectmode='day', date_pattern='yyyy-MM-dd')
@@ -292,8 +294,7 @@ if __name__ == "__main__":
     start_date.grid(row=7, column=0, padx=(60,0))
 
     Label(menu_frame,  text="Start Time:", bg='#27348b', fg='white', font="Arial 12").grid(sticky = W, row=9, column=0, pady=(10))
-    #Label(menu_frame,  text='', bg='#27348b', fg='white', font="Arial 12").grid(sticky = E, row=10, column=0, padx=0, pady=3) #filler label
-    
+
     hours_list = []
     minutes_list = []
     for i in range(24):
@@ -311,24 +312,24 @@ if __name__ == "__main__":
     start_hour.set("Hour")
     start_hours = ttk.Combobox(menu_frame, textvariable=start_hour, state="readonly", values=hours_list, width=5)
     start_hours.bind("<FocusIn>", defocus)
-    start_hours.grid(row=9, column=0, padx=(20, 0))
+    start_hours.grid(row=9, column=0, padx=(0, 0))
 
     start_minute = StringVar(menu_frame)
     start_minute.set("Mins")
     start_minutes = ttk.Combobox(menu_frame, textvariable=start_minute, state="readonly", values=minutes_list, width=5)
     start_minutes.bind("<FocusIn>", defocus)
-    start_minutes.grid(row=9, column=0, padx=(150, 0))
+    start_minutes.grid(row=9, column=0, padx=(130, 0))
 
     Label(menu_frame,  text="End Date:", bg='#27348b', justify="left", anchor="w", fg='white', font="Arial 12").grid(sticky = W, row=13, column=0, pady=(20, 0))
     end_date = DateEntry(menu_frame, background='#27348b', selectmode='day', date_pattern='yyyy-MM-dd')
     end_date._top_cal.overrideredirect(False)
-    end_date.grid(row=13, column=0, padx=(60, 0), pady=(20, 0))
+    end_date.grid(row=13, column=0, padx=(63, 0), pady=(20, 0))
 
     Label(menu_frame,  text="End Time:", bg='#27348b', fg='white', font="Arial 12").grid(sticky = W, row=14, column=0, pady=(10, 0))
     end_hour = StringVar(menu_frame)
     end_hour.set("Hour")
     end_hours = ttk.Combobox(menu_frame, textvariable=end_hour, state="readonly", values=hours_list, width=5)
-    end_hours.grid(row=14, column=0, padx=(20, 0))
+    end_hours.grid(row=14, column=0, padx=(0, 0))
 
     # colon2 = Label(menu_frame,  text=":", bg='#27348b', fg='white', font="Arial 12")
     # colon2.grid(row=14, column=0, padx=(150, 0))
@@ -336,7 +337,7 @@ if __name__ == "__main__":
     end_minute = StringVar(menu_frame)
     end_minute.set("Mins")
     end_minutes = ttk.Combobox(menu_frame, textvariable=end_minute, state="readonly", values=minutes_list, width=5)
-    end_minutes.grid(row=14, column=0, padx=(150, 0))
+    end_minutes.grid(row=14, column=0, padx=(130, 0))
 
     Label(menu_frame,  text='', bg='#27348b', fg='white', font="Arial 12").grid(sticky = E, row=14, column=0, padx=0, pady=2) #filler label
 
@@ -351,7 +352,10 @@ if __name__ == "__main__":
     start_analysis_button.grid(row=18, rowspan=2, column=0)
     
     #Logo
-    
+    #uwa_logo = Image.open("./UWA-logo-1.png")
+    #img_resized=uwa_logo.resize((220,80)) # new width & height
+    #my_img=ImageTk.PhotoImage(img_resized)
+
     # uwa_logo = Image.open("./UWA-logo-1.png")
     # Change for the compiled program use
     uwa_logo_path = resource_path("UWA-logo-1.png")
@@ -359,6 +363,7 @@ if __name__ == "__main__":
 
     img_resized=uwa_logo.resize((220,80)) # new width & height
     my_img=ImageTk.PhotoImage(img_resized)
+
 
     l1=Label(menu_frame,image=my_img,background='#27348b')
     l1.grid(column=0, pady=(50, 0))
