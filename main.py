@@ -329,7 +329,7 @@ if __name__ == "__main__":
     end_hour = StringVar(menu_frame)
     end_hour.set("Hour")
     end_hours = ttk.Combobox(menu_frame, textvariable=end_hour, state="readonly", values=hours_list, width=5)
-    end_hours.grid(row=14, column=0, padx=(0, 0))
+    end_hours.grid(row=14, column=0, pady=(10, 0))
 
     # colon2 = Label(menu_frame,  text=":", bg='#27348b', fg='white', font="Arial 12")
     # colon2.grid(row=14, column=0, padx=(150, 0))
@@ -337,7 +337,7 @@ if __name__ == "__main__":
     end_minute = StringVar(menu_frame)
     end_minute.set("Mins")
     end_minutes = ttk.Combobox(menu_frame, textvariable=end_minute, state="readonly", values=minutes_list, width=5)
-    end_minutes.grid(row=14, column=0, padx=(130, 0))
+    end_minutes.grid(row=14, column=0, padx=(130, 0), pady=(10, 0))
 
     Label(menu_frame,  text='', bg='#27348b', fg='white', font="Arial 12").grid(sticky = E, row=14, column=0, padx=0, pady=2) #filler label
 
