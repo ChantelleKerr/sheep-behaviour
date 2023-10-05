@@ -21,6 +21,7 @@ from data_cleaning.data_clean import ProcessData
 
 clean_data_folder = None
 sheep_file = None
+plot_data = None
 
 global_var_lock = threading.Lock()
 
@@ -149,8 +150,10 @@ def multithread_reset():
 
 
 def startAnalysis(start_date, end_date, start_hour, start_minute, end_hour, end_minute):
-    plot_data = PlotData()
+    global plot_data
     global sheep_file
+
+    plot_data = PlotData()
     
     if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
         formatted_start = str(start_date) + " " + start_hour + ":" + start_minute + ":" + "00"
@@ -223,6 +226,12 @@ def changeMode(mode):
     
     if mode.lower() in modes:
         currentMode.config(text=mode.title())
+
+def get_report():
+    # TODO Add label to let user know its saving and has been saved
+    global plot_data
+    plot_data.generate_report()
+
 
 
 ## Application starting point
@@ -349,7 +358,7 @@ if __name__ == "__main__":
     currentMode.grid(sticky = W, row=3, column=1, rowspan=2)
 
     export_pdf_button = Button(graph_frame, text="EXPORT TO PDF", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10)
-    generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 10", background='#fdc300', activebackground='#a2c03b', focuscolor='', borderless=True, padx=0, pady=10)
+    generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 10", background='#fdc300', activebackground='#a2c03b', focuscolor='', borderless=True, padx=0, pady=10, command=get_report)
     export_pdf_button.place(rely=1.0, relx=1.0, x=-250, y=-30, anchor=SE)
     generate_report_button.place(rely=1.0, relx=1.0, x=-70, y=-30, anchor=SE)
 

@@ -10,6 +10,9 @@ import csv
 class PlotData():
     def __init__(self):
         self.data = []
+        self.start_date = None
+        self.end_date = None
+        self.folder_path = None
 
     def find_start_and_end_data(self, data_file, start_date, end_date):
         """
@@ -117,17 +120,15 @@ class PlotData():
         Function that is run when the "Start Analysis" button is pressed
         data_file, start_date, end_date should be passed as valid inputs
         '''
-        
+        self.start_date = start_date
+        self.end_date = end_date
+        self.folder_path = data_file
         self.data = self.find_start_and_end_data(data_file, start_date, end_date)
         avg_hertz = self.get_average_hertz_per_second(self.data)
         data = self.calculate_dates(self.data, avg_hertz)
         self.plot(data)
-        # TODO: Add button to call this instead
-        self.calculate_stats(data_file, start_date, end_date)
 
-    def calculate_stats(self, folder_path, start_date, end_date):
-        first_date = self.data['DATE'].iloc[0]
-        last_date = self.data['DATE'].iloc[-1]
+    def generate_report(self):
         self.data = self.data.drop(columns=['DATE'])
 
         mean_values = self.data.mean().round(2)
@@ -135,8 +136,8 @@ class PlotData():
         median_values = self.data.median().round(2)
         std_values = self.data.std().round(2)
 
-        stat_folder = os.path.dirname(folder_path)
-        file = os.path.basename(folder_path)
+        stat_folder = os.path.dirname(self.folder_path)
+        file = os.path.basename(self.folder_path)
 
         output_file = stat_folder + "/stats.csv"
         file_exists = os.path.exists(output_file)
@@ -149,17 +150,7 @@ class PlotData():
                                  'ACCEL_Y_MEAN', 'ACCEL_Y_MODE', 'ACCEL_Y_MEDIAN', 'ACCEL_Y_STD',
                                  'ACCEL_Z_MEAN', 'ACCEL_Z_MODE', 'ACCEL_Z_MEDIAN', 'ACCEL_Z_STD'])
             
-            writer.writerow([file, first_date, last_date,
+            writer.writerow([file, self.start_date, self.end_date,
                              mean_values['ACCEL_X'], mode_values['ACCEL_X'], median_values['ACCEL_X'], std_values['ACCEL_X'],
                              mean_values['ACCEL_Y'], mode_values['ACCEL_Y'], median_values['ACCEL_Y'], std_values['ACCEL_Y'],
                              mean_values['ACCEL_Z'], mode_values['ACCEL_Z'], median_values['ACCEL_Z'], std_values['ACCEL_Z']])
-
-
-
-# TODO: Remove hard coded data 
-start_date = '2023-02-16 13:05:35'
-end_date = '2023-02-16 13:10:00'
-data_file = 'test_data/GPS0028.csv'
-p = PlotData()
-p.start_analysis(data_file, start_date, end_date)
-
