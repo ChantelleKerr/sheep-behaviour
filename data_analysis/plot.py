@@ -145,7 +145,6 @@ class AnalyseSheep():
         data = self.calculate_dates(self.data, avg_hertz)
         self.plot(data)
 
-        # self.plot_axis_sum(data)
 
     def generate_report(self):
         self.data = self.data.drop(columns=['DATE'])
@@ -176,12 +175,17 @@ class AnalyseSheep():
 
     # Used to write analysed data to a file
     # Has dates in all rows 
-    def write_to_file():
-        pass
+    def write_to_file(self):
+        path = os.path.dirname(self.folder_path)
+        sheep = os.path.basename(self.folder_path).split(".")[0]
+        self.data.to_csv(path + f"/{sheep}_all_times", index=False)
+
+
 
 
 # start_date = '2023-02-16 13:05:35'
 # end_date = '2023-02-16 13:10:00'
 # data_file = 'test_data/GPS0028.csv'
-# p = PlotData()
+# p = AnalyseSheep()
 # p.start_analysis(data_file, start_date, end_date)
+# p.write_to_file()
