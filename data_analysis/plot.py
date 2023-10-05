@@ -7,7 +7,7 @@ import os
 import csv
 
 
-class PlotData():
+class AnalyseSheep():
     def __init__(self):
         self.data = []
         self.start_date = None
@@ -110,20 +110,20 @@ class PlotData():
         plt.show()
 
 
-    def plot_axis_sum(self, df):
+    def plot_amplitude(self):
         # Normalise the data (shift mean to zero)
-        df[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']] = (df[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']] - df[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']].mean()) / df[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']].std()
+        self.data[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']] = (self.data[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']] - self.data[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']].mean()) / self.data[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']].std()
 
         # Take the absolute values of the normalised dara
-        df[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']] = df[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']].abs()
+        self.data[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']] = self.data[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']].abs()
 
         # Calculate the sum of the absolute values for each row
-        df['total_sum'] = df[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']].sum(axis=1)
-        time_values = df.iloc[:, 3].tolist()
+        self.data['total_sum'] = self.data[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']].sum(axis=1)
+        time_values = self.data.iloc[:, 3].tolist()
 
         # Create the plot
         plt.figure(figsize=(10, 6))
-        plt.plot(time_values, df['total_sum'], label='Total Amplitude Sum', marker='o', markersize=0.5, linestyle='-', linewidth=0.5)
+        plt.plot(time_values, self.data['total_sum'], label='Total Amplitude Sum', marker='o', markersize=0.5, linestyle='-', linewidth=0.5)
         plt.xlabel('Time Values')
         plt.ylabel('Total Amplitude Sum (Normalised)')
         plt.title('Time Values vs. Total Amplitude Sum')

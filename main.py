@@ -13,7 +13,7 @@ from tkmacosx import (
     Button,  # for button colours since doesn't work on macOS (Tkinter issue)
 )
 
-from data_analysis.plot import PlotData
+from data_analysis.plot import AnalyseSheep
 from data_cleaning.data_clean import ProcessData
 
 # from data_cleaning.data_clean_threaded import ProcessData_Threaded
@@ -21,12 +21,12 @@ from data_cleaning.data_clean import ProcessData
 
 clean_data_folder = None
 sheep_file = None
-plot_data = None
+analysed_sheep = None
 
 global_var_lock = threading.Lock()
 
 
-def getFolders(folder_paths):
+def get_folders(folder_paths):
     folder_paths.append(askopendirnames(title="Select Directory"))
     changeMode("data cleaning")
     files = []
@@ -44,7 +44,7 @@ def getFolders(folder_paths):
                 break
             
             files.append(folder_path.rsplit("\\", 1)[1])
-    changeFile(files)
+    change_file(files)
     
     if len(folder_paths) == 1 and folder_paths[0] != ():
         load_files_button["state"] = DISABLED
@@ -83,7 +83,7 @@ def clean_files_thread(folder_path):
         global_var_lock.release()
 
 
-def cleanFiles(folder_paths):
+def clean_files(folder_paths):
     global clean_data_folder
 
     print("Folder paths in clean file:")
@@ -149,11 +149,11 @@ def multithread_reset():
     clean_files_button["state"] = DISABLED
 
 
-def startAnalysis(start_date, end_date, start_hour, start_minute, end_hour, end_minute):
-    global plot_data
+def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end_minute):
+    global analysed_sheep
     global sheep_file
 
-    plot_data = PlotData()
+    analysed_sheep = AnalyseSheep()
     
     if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
         formatted_start = str(start_date) + " " + start_hour + ":" + start_minute + ":" + "00"
@@ -162,7 +162,7 @@ def startAnalysis(start_date, end_date, start_hour, start_minute, end_hour, end_
         print(formatted_end)
         print(sheep_file)
         
-        plot_data.start_analysis(sheep_file, formatted_start, formatted_end)
+        analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
 
     else:
         messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
@@ -176,6 +176,8 @@ def defocus(event):
 # Selects and holds a sheep csv file from a cleaned sheep directory.
 def selectSheep():
     global sheep_file
+    global analysed_sheep
+    analysed_sheep = None # Remove the existing instance of "AnalyseSheep"
     file_path = askopenfilename(title="Select a cleaned data file", filetypes=[("CSV files", "*.csv")]) # filedialog.askdirectory()
     changeMode("data analysis")
     
@@ -184,7 +186,7 @@ def selectSheep():
         if file_name.startswith("GPS"):
             sheep_file = file_path
             start_analysis_button["state"] = NORMAL
-            changeFile([file_name]) # Changes the file name display
+            change_file([file_name]) # Changes the file name display
         else:
             messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
             return
@@ -193,7 +195,7 @@ def selectSheep():
 
 
 # Updates the intereior content of the current file label.
-def changeFile(filenames):
+def change_file(filenames):
     l = len(filenames)
     if l == 0:
         currentFile.config(text="N/A")
@@ -229,8 +231,14 @@ def changeMode(mode):
 
 def get_report():
     # TODO Add label to let user know its saving and has been saved
-    global plot_data
-    plot_data.generate_report()
+    global analysed_sheep
+    analysed_sheep.generate_report()
+
+def plot_amplitude():
+    # TODO Let the user know its plotting
+    global analysed_sheep
+    analysed_sheep.plot_amplitude()
+
 
 
 
@@ -264,7 +272,7 @@ if __name__ == "__main__":
 
     #Data Processing
     Label(menu_frame,  text="Data Processing", bg='#27348b', fg='white', font="Arial 16").grid(row=0, column=0, padx=20, pady=10)
-    load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 12 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=5, pady=15, command = lambda: getFolders(folder_paths))
+    load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 12 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=5, pady=15, command = lambda: get_folders(folder_paths))
     clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 12 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: unthreaded_clean_files(read_pb, clean_pb, write_pb, root, folder_paths))
     load_files_button.grid(row=1, column=0, rowspan=2)
     clean_files_button.grid(row=3, rowspan=2, column=0)
@@ -337,7 +345,7 @@ if __name__ == "__main__":
     canvas2.grid(row=15, column=0)
 
     select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 12 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=15, pady=15, command=selectSheep)    
-    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 12 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=7, pady=15, command= lambda: startAnalysis(start_date.get_date(), end_date.get_date(), start_hours.get(), start_minutes.get(), end_hours.get(), end_minutes.get()))
+    start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 12 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=7, pady=15, command= lambda: start_analysis(start_date.get_date(), end_date.get_date(), start_hours.get(), start_minutes.get(), end_hours.get(), end_minutes.get()))
     select_sheep_button.grid(row=16, column=0, rowspan=2)
     start_analysis_button.grid(row=18, rowspan=2, column=0)
     
@@ -357,9 +365,10 @@ if __name__ == "__main__":
     currentMode = Label(graph_frame,  text="N/A", fg='black', bg="white", font="Arial 12")
     currentMode.grid(sticky = W, row=3, column=1, rowspan=2)
 
-    plot_amp = Button(graph_frame, text="PLOT AMPLITUDE SUM", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10)
+    plot_amp = Button(graph_frame, text="PLOT AMPLITUDE SUM", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10,command=plot_amplitude)
     export_pdf_button = Button(graph_frame, text="EXPORT TO PDF", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10)
     generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 10", background='#fdc300', activebackground='#a2c03b', focuscolor='', borderless=True, padx=0, pady=10, command=get_report)
+    plot_amp.place(rely=1.0, relx=1.0, x=-450, y=-30, anchor=SE)
     export_pdf_button.place(rely=1.0, relx=1.0, x=-250, y=-30, anchor=SE)
     generate_report_button.place(rely=1.0, relx=1.0, x=-70, y=-30, anchor=SE)
 
