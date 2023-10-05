@@ -174,7 +174,7 @@ def defocus(event):
 
 
 # Selects and holds a sheep csv file from a cleaned sheep directory.
-def selectSheep():
+def select_sheep():
     global sheep_file
     global analysed_sheep
     analysed_sheep = None # Remove the existing instance of "AnalyseSheep"
@@ -229,6 +229,8 @@ def changeMode(mode):
     if mode.lower() in modes:
         currentMode.config(text=mode.title())
 
+
+#### DATA ANALYSIS FUNCTIONS
 def get_report():
     # TODO Add label to let user know its saving and has been saved
     global analysed_sheep
@@ -239,6 +241,11 @@ def plot_amplitude():
     global analysed_sheep
     analysed_sheep.plot_amplitude()
 
+
+def save_plot_data():
+    # TODO Let the user know its plotting
+    global analysed_sheep
+    analysed_sheep.write_to_file()
 
 
 
@@ -344,7 +351,7 @@ if __name__ == "__main__":
     canvas2.create_line(5, 25, 165, 25, width=0, fill='white')
     canvas2.grid(row=15, column=0)
 
-    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 12 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=15, pady=15, command=selectSheep)    
+    select_sheep_button = Button(menu_frame, text="SELECT SHEEP", font="Arial 12 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=15, pady=15, command=select_sheep)    
     start_analysis_button = Button(menu_frame, text="START ANALYSIS", font="Arial 12 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=7, pady=15, command= lambda: start_analysis(start_date.get_date(), end_date.get_date(), start_hours.get(), start_minutes.get(), end_hours.get(), end_minutes.get()))
     select_sheep_button.grid(row=16, column=0, rowspan=2)
     start_analysis_button.grid(row=18, rowspan=2, column=0)
@@ -366,10 +373,12 @@ if __name__ == "__main__":
     currentMode.grid(sticky = W, row=3, column=1, rowspan=2)
 
     plot_amp = Button(graph_frame, text="PLOT AMPLITUDE SUM", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10,command=plot_amplitude)
+    save_analyse_data = Button(graph_frame, text="SAVE PLOT DATA TO FILE", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10,command=save_plot_data)
     export_pdf_button = Button(graph_frame, text="EXPORT TO PDF", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10)
     generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 10", background='#fdc300', activebackground='#a2c03b', focuscolor='', borderless=True, padx=0, pady=10, command=get_report)
-    plot_amp.place(rely=1.0, relx=1.0, x=-450, y=-30, anchor=SE)
-    export_pdf_button.place(rely=1.0, relx=1.0, x=-250, y=-30, anchor=SE)
-    generate_report_button.place(rely=1.0, relx=1.0, x=-70, y=-30, anchor=SE)
+    export_pdf_button.place(rely=1.0, relx=1.0, x=-430, y=-10, anchor=SE)
+    plot_amp.place(rely=1.0, relx=1.0, x=-260, y=-10, anchor=SE)
+    save_analyse_data.place(rely=1.0, relx=1.0, x=-70, y=-10, anchor=SE)
+    generate_report_button.place(rely=1.0, relx=1.0, x=-70, y=-60, anchor=SE)
 
     root.mainloop()
