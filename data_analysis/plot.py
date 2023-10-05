@@ -85,11 +85,6 @@ class PlotData():
         z_accel = df.iloc[:, 2].tolist()
         time_values = df.iloc[:, 3].tolist() 
 
-        # Calcuate the mean for every minute (not sure if needed so commenting out for now)
-        # df.set_index('DATE', inplace=True)
-        # resampled_df = df.resample('1T').mean()
-        # print(resampled_df)
-
         fig, (ax_x, ax_y, ax_z) = plt.subplots(3, 1, sharex=True)
 
         ax_x.plot(time_values, x_accel, marker='o', markersize=0.5, linestyle='-', linewidth=0.5, label='X acceleration')
@@ -115,6 +110,28 @@ class PlotData():
         plt.show()
 
 
+    def plot_axis_sum(self, df):
+        # Normalise the data (shift mean to zero)
+        df[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']] = (df[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']] - df[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']].mean()) / df[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']].std()
+
+        # Take the absolute values of the normalised dara
+        df[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']] = df[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']].abs()
+
+        # Calculate the sum of the absolute values for each row
+        df['total_sum'] = df[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']].sum(axis=1)
+        time_values = df.iloc[:, 3].tolist()
+
+        # Create the plot
+        plt.figure(figsize=(10, 6))
+        plt.plot(time_values, df['total_sum'], label='Total Amplitude Sum', marker='o', markersize=0.5, linestyle='-', linewidth=0.5)
+        plt.xlabel('Time Values')
+        plt.ylabel('Total Amplitude Sum (Normalised)')
+        plt.title('Time Values vs. Total Amplitude Sum')
+        plt.legend()
+        plt.grid(True)
+        plt.show()
+
+
     def start_analysis(self, data_file, start_date, end_date):
         '''
         Function that is run when the "Start Analysis" button is pressed
@@ -127,6 +144,8 @@ class PlotData():
         avg_hertz = self.get_average_hertz_per_second(self.data)
         data = self.calculate_dates(self.data, avg_hertz)
         self.plot(data)
+
+        # self.plot_axis_sum(data)
 
     def generate_report(self):
         self.data = self.data.drop(columns=['DATE'])
@@ -154,3 +173,15 @@ class PlotData():
                              mean_values['ACCEL_X'], mode_values['ACCEL_X'], median_values['ACCEL_X'], std_values['ACCEL_X'],
                              mean_values['ACCEL_Y'], mode_values['ACCEL_Y'], median_values['ACCEL_Y'], std_values['ACCEL_Y'],
                              mean_values['ACCEL_Z'], mode_values['ACCEL_Z'], median_values['ACCEL_Z'], std_values['ACCEL_Z']])
+
+    # Used to write analysed data to a file
+    # Has dates in all rows 
+    def write_to_file():
+        pass
+
+
+# start_date = '2023-02-16 13:05:35'
+# end_date = '2023-02-16 13:10:00'
+# data_file = 'test_data/GPS0028.csv'
+# p = PlotData()
+# p.start_analysis(data_file, start_date, end_date)

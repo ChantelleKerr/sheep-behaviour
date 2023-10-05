@@ -357,6 +357,7 @@ if __name__ == "__main__":
     currentMode = Label(graph_frame,  text="N/A", fg='black', bg="white", font="Arial 12")
     currentMode.grid(sticky = W, row=3, column=1, rowspan=2)
 
+    plot_amp = Button(graph_frame, text="PLOT AMPLITUDE SUM", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10)
     export_pdf_button = Button(graph_frame, text="EXPORT TO PDF", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10)
     generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 10", background='#fdc300', activebackground='#a2c03b', focuscolor='', borderless=True, padx=0, pady=10, command=get_report)
     export_pdf_button.place(rely=1.0, relx=1.0, x=-250, y=-30, anchor=SE)
