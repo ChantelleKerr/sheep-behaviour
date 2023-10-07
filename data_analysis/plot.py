@@ -193,13 +193,13 @@ class AnalyseSheep():
         file_path = os.path.join(plot_dir, filename)
         self.data.to_csv(file_path, index=False)
 
+    # The plot must be open!
     def export_to_pdf(self):
         path = os.path.dirname(self.folder_path)
         plot_dir = os.path.join(path, "plots", self.plot_mode)
         os.makedirs(plot_dir, exist_ok=True) 
         filename = f"{self.sheep}.pdf"
         file_path = os.path.join(plot_dir, filename)
-
         if self.current_plot:
             self.current_plot.savefig(file_path, format='pdf')
 

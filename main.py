@@ -181,10 +181,10 @@ def multithread_reset():
 
 
 def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end_minute):
-    global analysed_sheep
-    global sheep_file
 
     def analysis_thread():
+        global analysed_sheep
+        global sheep_file
         formatted_start = str(start_date) + " " + start_hour + ":" + start_minute + ":" + "00"
         formatted_end = str(end_date) + " " + end_hour + ":" + end_minute + ":" + "00"
         
@@ -195,31 +195,12 @@ def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end
         current_plot("XYZ")
         
         analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
-        
         update_status("Plotted data successfully")
 
     if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
         threading.Thread(target=analysis_thread).start()
     else:
         messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
-    # update_status("Please Wait... Plotting data")
-
-    # analysed_sheep = AnalyseSheep()
-    
-    # if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
-    #     formatted_start = str(start_date) + " " + start_hour + ":" + start_minute + ":" + "00"
-    #     formatted_end = str(end_date) + " " + end_hour + ":" + end_minute + ":" + "00"
-    #     print(formatted_start)
-    #     print(formatted_end)
-    #     print(sheep_file)
-    #     analysed_sheep.plot_mode = "XYZ"
-        
-    #     analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
-    #     current_plot("XYZ")
-    #     operation_status.config(text="Plotted data successfully")
-
-    # else:
-    #     messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
     
 
 def defocus(event):
