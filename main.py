@@ -169,6 +169,9 @@ def unthreaded_clean_files(root, folder_paths):
 
     messagebox.showinfo("Success", "Successfully cleaned selected data files")
 
+def update_status(status_text):
+    operation_status.config(text=status_text)
+
 
 def multithread_reset():
     global folder_paths
@@ -181,21 +184,42 @@ def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end
     global analysed_sheep
     global sheep_file
 
-    analysed_sheep = AnalyseSheep()
-    
-    if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
+    def analysis_thread():
         formatted_start = str(start_date) + " " + start_hour + ":" + start_minute + ":" + "00"
         formatted_end = str(end_date) + " " + end_hour + ":" + end_minute + ":" + "00"
-        print(formatted_start)
-        print(formatted_end)
-        print(sheep_file)
+        
+        update_status("Please Wait... Plotting data")
+
+        analysed_sheep = AnalyseSheep()
         analysed_sheep.plot_mode = "XYZ"
+        current_plot("XYZ")
         
         analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
-        current_plot("XYZ")
+        
+        update_status("Plotted data successfully")
 
+    if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
+        threading.Thread(target=analysis_thread).start()
     else:
         messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
+    # update_status("Please Wait... Plotting data")
+
+    # analysed_sheep = AnalyseSheep()
+    
+    # if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
+    #     formatted_start = str(start_date) + " " + start_hour + ":" + start_minute + ":" + "00"
+    #     formatted_end = str(end_date) + " " + end_hour + ":" + end_minute + ":" + "00"
+    #     print(formatted_start)
+    #     print(formatted_end)
+    #     print(sheep_file)
+    #     analysed_sheep.plot_mode = "XYZ"
+        
+    #     analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
+    #     current_plot("XYZ")
+    #     operation_status.config(text="Plotted data successfully")
+
+    # else:
+    #     messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
     
 
 def defocus(event):
@@ -263,30 +287,35 @@ def current_plot(plot_type):
     types = ["Amplitude", "XYZ"]
     
     if plot_type in types:
-        plot_text.config(text=plot_type.title())
+        plot_text.config(text=plot_type)
 
 #### DATA ANALYSIS FUNCTIONS
 def get_report():
-    # TODO Add label to let user know its saving and has been saved
+    operation_status.config(text="Please Wait... Saving report to CSV")
     global analysed_sheep
     analysed_sheep.generate_report()
+    operation_status.config(text="Saved to CSV successfully")
 
 def plot_amplitude():
-    # TODO Let the user know its plotting
+    operation_status.config(text="Please Wait... Plotting Amplitude")
     global analysed_sheep
     analysed_sheep.plot_mode = "Amplitude"
     current_plot("Amplitude")
     analysed_sheep.plot_amplitude()
+    operation_status.config(text="Plotting Amplitude Completed")
 
 
 def save_plot_data():
-    # TODO Let the user know its plotting
+    operation_status.config(text="Please Wait... Saving plot data to CSV")
     global analysed_sheep
     analysed_sheep.write_to_file()
+    operation_status.config(text="Saved to CSV successfully")
 
 def export_plot_pdf():
     global analysed_sheep
+    operation_status.config(text="Exporting plot to PDF")
     analysed_sheep.export_to_pdf()
+    operation_status.config(text="Exported to PDF successfully")
 
 
 
@@ -409,6 +438,9 @@ if __name__ == "__main__":
     Label(graph_frame,  text="Current Plot", fg='#27348b', bg="white", font="Arial 12 bold").grid(sticky = W, row=4, column=0, padx=(10), pady=(5))
     plot_text = Label(graph_frame,  text="N/A", fg='black', bg="white", font="Arial 12")
     plot_text.grid(sticky = W, row=3, column=1, rowspan=2)
+
+    operation_status = Label(graph_frame,  text="No operation selected", fg='black', bg="white", font="Arial 12")
+    operation_status.grid(sticky = S, row=5, column=0, padx=(10), pady=(5))
 
     plot_amp = Button(graph_frame, text="PLOT AMPLITUDE SUM", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10,command=plot_amplitude)
     save_analyse_data = Button(graph_frame, text="SAVE PLOT DATA TO FILE", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10,command=save_plot_data)
