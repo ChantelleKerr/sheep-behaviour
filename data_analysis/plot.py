@@ -16,6 +16,7 @@ class AnalyseSheep():
         self.current_plot = None
         self.sheep = None
         self.plot_mode = None
+        self.avg_hertz = None
 
     def find_start_and_end_data(self, data_file, start_date, end_date):
         """
@@ -62,24 +63,22 @@ class AnalyseSheep():
         minute_counts = pd.Series(minute_indices).diff().fillna(minute_indices[0]).astype(int)
         hertz_per_second = minute_counts[1:] / 60
 
-        average_hertz_per_second = round(hertz_per_second.mean())
-        return average_hertz_per_second
+        self.avg_hertz = round(hertz_per_second.mean())
+        
 
 
-    def calculate_dates(self, data, avg_hertz):
+    def calculate_dates(self):
         '''
         Since we only have dates for every minute we need to calculate the dates inbetween based on the average hertz
         '''
-        initial_date = data['DATE'].iloc[0]
-        num_rows = len(data)
+        initial_date = self.data['DATE'].iloc[0]
+        num_rows = len(self.data)
         
-        time_diff_seconds = 1 / avg_hertz
+        time_diff_seconds = 1 / self.avg_hertz
         
         timedelta_array = np.arange(num_rows) * pd.Timedelta(seconds=time_diff_seconds)
         
-        data['DATE'] = initial_date + timedelta_array
-
-        return data
+        self.data['DATE'] = initial_date + timedelta_array
 
 
     def plot(self, df):
@@ -150,16 +149,15 @@ class AnalyseSheep():
         self.end_date = end_date
         self.folder_path = data_file
         self.data = self.find_start_and_end_data(data_file, start_date, end_date)
-        avg_hertz = self.get_average_hertz_per_second(self.data)
-        data = self.calculate_dates(self.data, avg_hertz)
+        self.get_average_hertz_per_second(self.data)
+        self.calculate_dates()
         self.sheep = os.path.basename(self.folder_path).split(".")[0]
-        self.plot(data)
+        self.plot(self.data)
 
 
     def generate_report(self):
-        print("GEN REPORT", self.plot_mode)
-        #self.data = self.data.drop(columns=['DATE'])
         accel_data = self.data.iloc[:, :3]
+
         mean_values = accel_data.mean().round(2)
         mode_values = accel_data.mode().iloc[0].round(2)  # Use .iloc[0] (might have multiple modes)
         median_values = accel_data.median().round(2)
@@ -188,7 +186,6 @@ class AnalyseSheep():
     # Used to write analysed data to a file
     # Has dates in all rows 
     def write_to_file(self):
-        print("WRITE PLOT DATA", self.plot_mode)
         path = os.path.dirname(self.folder_path)
         plot_dir = os.path.join(path, "plots", self.plot_mode)
         os.makedirs(plot_dir, exist_ok=True) 
@@ -197,7 +194,6 @@ class AnalyseSheep():
         self.data.to_csv(file_path, index=False)
 
     def export_to_pdf(self):
-        print("EXPORT", self.plot_mode)
         path = os.path.dirname(self.folder_path)
         plot_dir = os.path.join(path, "plots", self.plot_mode)
         os.makedirs(plot_dir, exist_ok=True) 
