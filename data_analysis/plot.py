@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import os
 import csv
+import copy
 
 
 class AnalyseSheep():
@@ -136,7 +137,7 @@ class AnalyseSheep():
         
         plt.legend()
         plt.grid(True)
-        self.current_plot = plt 
+        self.current_plot = plt
         plt.show()
 
 
@@ -194,14 +195,14 @@ class AnalyseSheep():
         self.data.to_csv(file_path, index=False)
 
     # The plot must be open!
-    def export_to_pdf(self):
+    def export_plot(self):
         path = os.path.dirname(self.folder_path)
         plot_dir = os.path.join(path, "plots", self.plot_mode)
         os.makedirs(plot_dir, exist_ok=True) 
-        filename = f"{self.sheep}.pdf"
+        filename = f"{self.sheep}.png"
         file_path = os.path.join(plot_dir, filename)
         if self.current_plot:
-            self.current_plot.savefig(file_path, format='pdf')
+            self.current_plot.savefig(file_path, format='png')
 
 
 

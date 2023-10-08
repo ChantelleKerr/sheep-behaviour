@@ -182,25 +182,23 @@ def multithread_reset():
 
 def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end_minute):
 
-    def analysis_thread():
         global analysed_sheep
         global sheep_file
         formatted_start = str(start_date) + " " + start_hour + ":" + start_minute + ":" + "00"
         formatted_end = str(end_date) + " " + end_hour + ":" + end_minute + ":" + "00"
-        
-        update_status("Please Wait... Plotting data")
 
-        analysed_sheep = AnalyseSheep()
-        analysed_sheep.plot_mode = "XYZ"
-        current_plot("XYZ")
+        if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
         
-        analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
-        update_status("Plotted data successfully")
+            update_status("Please Wait... Plotting data")
 
-    if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
-        threading.Thread(target=analysis_thread).start()
-    else:
-        messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
+            analysed_sheep = AnalyseSheep()
+            analysed_sheep.plot_mode = "XYZ"
+            current_plot("XYZ")
+            
+            analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
+            update_status("Plotted data successfully")
+        else:
+            messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
     
 
 def defocus(event):
@@ -292,11 +290,11 @@ def save_plot_data():
     analysed_sheep.write_to_file()
     operation_status.config(text="Saved to CSV successfully")
 
-def export_plot_pdf():
+def export_plot():
     global analysed_sheep
-    operation_status.config(text="Exporting plot to PDF")
-    analysed_sheep.export_to_pdf()
-    operation_status.config(text="Exported to PDF successfully")
+    operation_status.config(text="Exporting plot")
+    analysed_sheep.export_plot()
+    operation_status.config(text="Exported successfully")
 
 
 
@@ -425,7 +423,7 @@ if __name__ == "__main__":
 
     plot_amp = Button(graph_frame, text="PLOT AMPLITUDE SUM", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10,command=plot_amplitude)
     save_analyse_data = Button(graph_frame, text="SAVE PLOT DATA TO FILE", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10,command=save_plot_data)
-    export_pdf_button = Button(graph_frame, text="EXPORT TO PDF", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10, command=export_plot_pdf)
+    export_pdf_button = Button(graph_frame, text="EXPORT PLOT", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10, command=export_plot)
     generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 10", background='#fdc300', activebackground='#a2c03b', focuscolor='', borderless=True, padx=0, pady=10, command=get_report)
     export_pdf_button.place(rely=1.0, relx=1.0, x=-430, y=-10, anchor=SE)
     plot_amp.place(rely=1.0, relx=1.0, x=-260, y=-10, anchor=SE)
