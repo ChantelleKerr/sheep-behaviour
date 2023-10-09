@@ -7,6 +7,7 @@ import webbrowser
 from queue import Queue
 from tkinter import *
 from tkinter import filedialog, messagebox, ttk
+from datetime import datetime
 
 from PIL import Image, ImageTk
 from tkcalendar import DateEntry
@@ -131,20 +132,28 @@ def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end
         formatted_start = str(start_date) + " " + start_hour + ":" + start_minute + ":" + "00"
         formatted_end = str(end_date) + " " + end_hour + ":" + end_minute + ":" + "00"
 
+        # Convert the date-time strings to datetime objects
+        date_time1 = datetime.strptime(formatted_start, "%Y-%m-%d %H:%M:%S")
+        date_time2 = datetime.strptime(formatted_end, "%Y-%m-%d %H:%M:%S")
+
         if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
         
-            update_status("Please Wait... Plotting data")
+            # Compare the datetime objects
+            if date_time1 >= date_time2:
+                messagebox.showinfo("Failure", "The first date is not before or the same as the second date. Please try again.")
+            else:
+                update_status("Please Wait... Plotting data")
 
-            analysed_sheep = AnalyseSheep()
-            analysed_sheep.plot_mode = "XYZ"
-            current_plot("XYZ")
+                analysed_sheep = AnalyseSheep()
+                analysed_sheep.plot_mode = "XYZ"
+                current_plot("XYZ")
             
-            analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
-            update_status("Plotted data successfully")
-            avg_hertz.config(text=analysed_sheep.avg_hertz)
+                analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
+                update_status("Plotted data successfully")
+                avg_hertz.config(text=analysed_sheep.avg_hertz)
         else:
             messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
-    
+
 #Calendar defocus so it doesn't highlight the calendar when pressed
 def defocus(event):
     event.widget.master.focus_set()

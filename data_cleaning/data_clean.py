@@ -5,6 +5,7 @@ import threading
 import time
 from tkinter import *
 from tkinter import ttk
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
