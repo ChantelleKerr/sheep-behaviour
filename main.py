@@ -107,9 +107,6 @@ def unthreaded_clean_files(root):
                 process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", root)
                 print("Completed writing")
                 cleaned_data = [] # Free memory
-
-
-
     messagebox.showinfo("Success", "Successfully cleaned selected data files")
     webbrowser.open('file:///'+path_to_folder)
     label_restart()
@@ -126,7 +123,6 @@ def update_status(status_text):
     operation_status.config(text=status_text)
 
 def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end_minute):
-
         global analysed_sheep
         global sheep_file
         formatted_start = str(start_date) + " " + start_hour + ":" + start_minute + ":" + "00"
@@ -143,6 +139,10 @@ def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end
                 messagebox.showinfo("Failure", "The first date is not before or the same as the second date. Please try again.")
             else:
                 update_status("Please Wait... Plotting data")
+                plot_amp["state"] = NORMAL
+                save_analyse_data["state"] = NORMAL
+                export_pdf_button["state"] = NORMAL
+                generate_report_button["state"] = NORMAL
 
                 analysed_sheep = AnalyseSheep()
                 analysed_sheep.plot_mode = "XYZ"
