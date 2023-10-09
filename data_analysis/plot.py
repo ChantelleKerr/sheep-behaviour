@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import os
 import csv
+import copy
 
 
 class AnalyseSheep():
@@ -13,6 +14,10 @@ class AnalyseSheep():
         self.start_date = None
         self.end_date = None
         self.folder_path = None
+        self.current_plot = None
+        self.sheep = None
+        self.plot_mode = None
+        self.avg_hertz = None
 
     def find_start_and_end_data(self, data_file, start_date, end_date):
         """
@@ -59,24 +64,22 @@ class AnalyseSheep():
         minute_counts = pd.Series(minute_indices).diff().fillna(minute_indices[0]).astype(int)
         hertz_per_second = minute_counts[1:] / 60
 
-        average_hertz_per_second = round(hertz_per_second.mean())
-        return average_hertz_per_second
+        self.avg_hertz = round(hertz_per_second.mean())
+        
 
 
-    def calculate_dates(self, data, avg_hertz):
+    def calculate_dates(self):
         '''
         Since we only have dates for every minute we need to calculate the dates inbetween based on the average hertz
         '''
-        initial_date = data['DATE'].iloc[0]
-        num_rows = len(data)
+        initial_date = self.data['DATE'].iloc[0]
+        num_rows = len(self.data)
         
-        time_diff_seconds = 1 / avg_hertz
+        time_diff_seconds = 1 / self.avg_hertz
         
         timedelta_array = np.arange(num_rows) * pd.Timedelta(seconds=time_diff_seconds)
         
-        data['DATE'] = initial_date + timedelta_array
-
-        return data
+        self.data['DATE'] = initial_date + timedelta_array
 
 
     def plot(self, df):
@@ -86,6 +89,7 @@ class AnalyseSheep():
         time_values = df.iloc[:, 3].tolist() 
 
         fig, (ax_x, ax_y, ax_z) = plt.subplots(3, 1, sharex=True)
+        ax_x.set_title(self.sheep)
 
         ax_x.plot(time_values, x_accel, marker='o', markersize=0.5, linestyle='-', linewidth=0.5, label='X acceleration')
         ax_y.plot(time_values, y_accel, marker='o', markersize=0.5, linestyle='-', linewidth=0.5, label='Y acceleration')
@@ -105,8 +109,11 @@ class AnalyseSheep():
         ax_x.yaxis.grid(True)
         ax_y.yaxis.grid(True)
         ax_z.yaxis.grid(True)
+        
+
 
         plt.tight_layout()
+        self.current_plot = plt
         plt.show()
 
 
@@ -123,12 +130,14 @@ class AnalyseSheep():
 
         # Create the plot
         plt.figure(figsize=(10, 6))
+        plt.title(f'Total Amplitude Sum {self.sheep}')
         plt.plot(time_values, self.data['total_sum'], label='Total Amplitude Sum', marker='o', markersize=0.5, linestyle='-', linewidth=0.5)
         plt.xlabel('Time Values')
         plt.ylabel('Total Amplitude Sum (Normalised)')
-        plt.title('Time Values vs. Total Amplitude Sum')
+        
         plt.legend()
         plt.grid(True)
+        self.current_plot = plt
         plt.show()
 
 
@@ -141,23 +150,25 @@ class AnalyseSheep():
         self.end_date = end_date
         self.folder_path = data_file
         self.data = self.find_start_and_end_data(data_file, start_date, end_date)
-        avg_hertz = self.get_average_hertz_per_second(self.data)
-        data = self.calculate_dates(self.data, avg_hertz)
-        self.plot(data)
+        self.get_average_hertz_per_second(self.data)
+        self.calculate_dates()
+        self.sheep = os.path.basename(self.folder_path).split(".")[0]
+        self.plot(self.data)
 
 
     def generate_report(self):
-        self.data = self.data.drop(columns=['DATE'])
+        accel_data = self.data.iloc[:, :3]
 
-        mean_values = self.data.mean().round(2)
-        mode_values = self.data.mode().iloc[0].round(2)  # Use .iloc[0] (might have multiple modes)
-        median_values = self.data.median().round(2)
-        std_values = self.data.std().round(2)
+        mean_values = accel_data.mean().round(2)
+        mode_values = accel_data.mode().iloc[0].round(2)  # Use .iloc[0] (might have multiple modes)
+        median_values = accel_data.median().round(2)
+        std_values = accel_data.std().round(2)
 
         stat_folder = os.path.dirname(self.folder_path)
-        file = os.path.basename(self.folder_path)
+        report_dir = os.path.join(stat_folder, "reports", self.plot_mode)
+        os.makedirs(report_dir, exist_ok=True) 
 
-        output_file = stat_folder + "/stats.csv"
+        output_file = os.path.join(report_dir, "stats.csv")
         file_exists = os.path.exists(output_file)
 
         with open(output_file, mode='a', newline='') as f:
@@ -168,7 +179,7 @@ class AnalyseSheep():
                                  'ACCEL_Y_MEAN', 'ACCEL_Y_MODE', 'ACCEL_Y_MEDIAN', 'ACCEL_Y_STD',
                                  'ACCEL_Z_MEAN', 'ACCEL_Z_MODE', 'ACCEL_Z_MEDIAN', 'ACCEL_Z_STD'])
             
-            writer.writerow([file, self.start_date, self.end_date,
+            writer.writerow([self.sheep, self.start_date, self.end_date,
                              mean_values['ACCEL_X'], mode_values['ACCEL_X'], median_values['ACCEL_X'], std_values['ACCEL_X'],
                              mean_values['ACCEL_Y'], mode_values['ACCEL_Y'], median_values['ACCEL_Y'], std_values['ACCEL_Y'],
                              mean_values['ACCEL_Z'], mode_values['ACCEL_Z'], median_values['ACCEL_Z'], std_values['ACCEL_Z']])
@@ -177,8 +188,21 @@ class AnalyseSheep():
     # Has dates in all rows 
     def write_to_file(self):
         path = os.path.dirname(self.folder_path)
-        sheep = os.path.basename(self.folder_path).split(".")[0]
-        self.data.to_csv(path + f"/{sheep}_all_times", index=False)
+        plot_dir = os.path.join(path, "plots", self.plot_mode)
+        os.makedirs(plot_dir, exist_ok=True) 
+        filename = f"{self.sheep}_plot_data.csv"
+        file_path = os.path.join(plot_dir, filename)
+        self.data.to_csv(file_path, index=False)
+
+    # The plot must be open!
+    def export_plot(self):
+        path = os.path.dirname(self.folder_path)
+        plot_dir = os.path.join(path, "plots", self.plot_mode)
+        os.makedirs(plot_dir, exist_ok=True) 
+        filename = f"{self.sheep}.png"
+        file_path = os.path.join(plot_dir, filename)
+        if self.current_plot:
+            self.current_plot.savefig(file_path, format='png')
 
 
 
@@ -188,4 +212,5 @@ class AnalyseSheep():
 # data_file = 'test_data/GPS0028.csv'
 # p = AnalyseSheep()
 # p.start_analysis(data_file, start_date, end_date)
+# p.export_to_pdf()
 # p.write_to_file()

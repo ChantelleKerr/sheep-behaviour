@@ -169,6 +169,9 @@ def unthreaded_clean_files(root, folder_paths):
 
     messagebox.showinfo("Success", "Successfully cleaned selected data files")
 
+def update_status(status_text):
+    operation_status.config(text=status_text)
+
 
 def multithread_reset():
     global folder_paths
@@ -178,22 +181,24 @@ def multithread_reset():
 
 
 def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end_minute):
-    global analysed_sheep
-    global sheep_file
 
-    analysed_sheep = AnalyseSheep()
-    
-    if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
+        global analysed_sheep
+        global sheep_file
         formatted_start = str(start_date) + " " + start_hour + ":" + start_minute + ":" + "00"
         formatted_end = str(end_date) + " " + end_hour + ":" + end_minute + ":" + "00"
-        print(formatted_start)
-        print(formatted_end)
-        print(sheep_file)
-        
-        analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
 
-    else:
-        messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
+        if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
+        
+            update_status("Please Wait... Plotting data")
+
+            analysed_sheep = AnalyseSheep()
+            analysed_sheep.plot_mode = "XYZ"
+            current_plot("XYZ")
+            
+            analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
+            update_status("Plotted data successfully")
+        else:
+            messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
     
 
 def defocus(event):
@@ -257,23 +262,39 @@ def change_mode(mode):
     if mode.lower() in modes:
         currentMode.config(text=mode.title())
 
+def current_plot(plot_type):
+    types = ["Amplitude", "XYZ"]
+    
+    if plot_type in types:
+        plot_text.config(text=plot_type)
 
 #### DATA ANALYSIS FUNCTIONS
 def get_report():
-    # TODO Add label to let user know its saving and has been saved
+    operation_status.config(text="Please Wait... Saving report to CSV")
     global analysed_sheep
     analysed_sheep.generate_report()
+    operation_status.config(text="Saved to CSV successfully")
 
 def plot_amplitude():
-    # TODO Let the user know its plotting
+    operation_status.config(text="Please Wait... Plotting Amplitude")
     global analysed_sheep
+    analysed_sheep.plot_mode = "Amplitude"
+    current_plot("Amplitude")
     analysed_sheep.plot_amplitude()
+    operation_status.config(text="Plotting Amplitude Completed")
 
 
 def save_plot_data():
-    # TODO Let the user know its plotting
+    operation_status.config(text="Please Wait... Saving plot data to CSV")
     global analysed_sheep
     analysed_sheep.write_to_file()
+    operation_status.config(text="Saved to CSV successfully")
+
+def export_plot():
+    global analysed_sheep
+    operation_status.config(text="Exporting plot")
+    analysed_sheep.export_plot()
+    operation_status.config(text="Exported successfully")
 
 
 
@@ -375,12 +396,6 @@ if __name__ == "__main__":
     select_sheep_button.grid(row=16, column=0, rowspan=2)
     start_analysis_button.grid(row=18, rowspan=2, column=0)
     
-    #Logo
-    #uwa_logo = Image.open("./UWA-logo-1.png")
-    #img_resized=uwa_logo.resize((220,80)) # new width & height
-    #my_img=ImageTk.PhotoImage(img_resized)
-
-    # uwa_logo = Image.open("./UWA-logo-1.png")
     # Change for the compiled program use
     uwa_logo_path = resource_path("UWA-logo-1.png")
     uwa_logo = Image.open(uwa_logo_path)
@@ -396,13 +411,19 @@ if __name__ == "__main__":
     Label(graph_frame,  text="Current File(s)", fg='#27348b',bg='white', font="Arial 12 bold").grid(sticky=W, padx=(10), pady=(10, 5), rowspan=2)
     currentFile = Label(graph_frame,  text="N/A", fg='black', bg='white', font="Arial 12")
     currentFile.grid(sticky = W, row=0, column=1, rowspan=2)
-    Label(graph_frame,  text="Current Mode", fg='#27348b', bg="white", font="Arial 12 bold").grid(sticky = W, row=3, column=0, padx=(10))
+    Label(graph_frame,  text="Current Mode", fg='#27348b', bg="white", font="Arial 12 bold").grid(sticky = W, row=2, column=0, padx=(10))
     currentMode = Label(graph_frame,  text="N/A", fg='black', bg="white", font="Arial 12")
-    currentMode.grid(sticky = W, row=3, column=1, rowspan=2)
+    currentMode.grid(sticky = W, row=2, column=1, rowspan=2)
+    Label(graph_frame,  text="Current Plot", fg='#27348b', bg="white", font="Arial 12 bold").grid(sticky = W, row=4, column=0, padx=(10), pady=(5))
+    plot_text = Label(graph_frame,  text="N/A", fg='black', bg="white", font="Arial 12")
+    plot_text.grid(sticky = W, row=3, column=1, rowspan=2)
+
+    operation_status = Label(graph_frame,  text="No operation selected", fg='black', bg="white", font="Arial 12")
+    operation_status.grid(sticky = S, row=5, column=0, padx=(10), pady=(5))
 
     plot_amp = Button(graph_frame, text="PLOT AMPLITUDE SUM", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10,command=plot_amplitude)
     save_analyse_data = Button(graph_frame, text="SAVE PLOT DATA TO FILE", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10,command=save_plot_data)
-    export_pdf_button = Button(graph_frame, text="EXPORT TO PDF", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10)
+    export_pdf_button = Button(graph_frame, text="EXPORT PLOT", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10, command=export_plot)
     generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 10", background='#fdc300', activebackground='#a2c03b', focuscolor='', borderless=True, padx=0, pady=10, command=get_report)
     export_pdf_button.place(rely=1.0, relx=1.0, x=-430, y=-10, anchor=SE)
     plot_amp.place(rely=1.0, relx=1.0, x=-260, y=-10, anchor=SE)
