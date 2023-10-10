@@ -55,7 +55,6 @@ def get_folders():
         folder_paths = []
 
     folder_paths.append(askopendirnames(title="Select Directory"))
-    change_mode("data cleaning")
     files = []
     
     for tuple in folder_paths:
@@ -75,6 +74,7 @@ def get_folders():
     change_file(files)
     
     if len(folder_paths) == 1 and folder_paths[0] != ():
+        change_mode("data cleaning")
         clean_files_button["state"] = NORMAL
 
 def unthreaded_clean_files(root):
@@ -133,11 +133,10 @@ def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end
         formatted_start = str(start_date) + " " + start_hour + ":" + start_minute + ":" + "00"
         formatted_end = str(end_date) + " " + end_hour + ":" + end_minute + ":" + "00"
 
-        # Convert the date-time strings to datetime objects
-        date_time1 = datetime.strptime(formatted_start, "%Y-%m-%d %H:%M:%S")
-        date_time2 = datetime.strptime(formatted_end, "%Y-%m-%d %H:%M:%S")
-
         if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
+            # Convert the date-time strings to datetime objects
+            date_time1 = datetime.strptime(formatted_start, "%Y-%m-%d %H:%M:%S")
+            date_time2 = datetime.strptime(formatted_end, "%Y-%m-%d %H:%M:%S")
         
             # Compare the datetime objects
             if date_time1 >= date_time2:
@@ -169,19 +168,22 @@ def select_sheep():
     global sheep_file
     global analysed_sheep
     analysed_sheep = None # Remove the existing instance of "AnalyseSheep"
+    file_path = None
     file_path = askopenfilename(title="Select a cleaned data file", filetypes=[("CSV files", "*.csv")]) # filedialog.askdirectory()
-    change_mode("data analysis")
-    
-    try:
-        file_name = os.path.basename(file_path)
-        if file_name.startswith("GPS"):
-            sheep_file = file_path
-            start_analysis_button["state"] = NORMAL
-            change_file([file_name]) # Changes the file name display
-        else:
-            messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
+    if len(file_path) != 0:
+        try:
+            file_name = os.path.basename(file_path)
+            if file_name.startswith("GPS"):
+                sheep_file = file_path
+                start_analysis_button["state"] = NORMAL
+                change_file([file_name]) # Changes the file name display
+                change_mode("data analysis")
+            else:
+                messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
+                return
+        except:
             return
-    except:
+    else:
         return
 
 # Updates the interior content of the current file label.
