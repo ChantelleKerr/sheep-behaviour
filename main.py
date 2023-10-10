@@ -95,6 +95,7 @@ def unthreaded_clean_files(root):
             if len(combined_data) > 0:
                 print("Cleaning data in progress")
                 cleaned_data = process_data.start_clean_data(root, combined_data)
+
                 combined_data = [] # free memory
                 print("Completed data cleaning")
             
@@ -107,8 +108,12 @@ def unthreaded_clean_files(root):
                 process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", root)
                 print("Completed writing")
                 cleaned_data = [] # Free memory
-    messagebox.showinfo("Success", "Successfully cleaned selected data files")
-    webbrowser.open('file:///'+path_to_folder)
+
+                messagebox.showinfo("Success", "Successfully cleaned selected data files")
+                webbrowser.open('file:///'+path_to_folder)
+            else:
+                messagebox.showerror("Error", "Folder does not contain a file with a starting date. Please try again.")
+                label_restart()
     label_restart()
 
 def label_restart():

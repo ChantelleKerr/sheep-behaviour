@@ -25,7 +25,7 @@ class AnalyseSheep():
         """
         df = pd.read_csv(data_file)
 
-        
+
         start_date = datetime.strptime(start_date, '%Y-%m-%d %H:%M:%S')
         end_date = datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S')
         df['DATE'] = pd.to_datetime(df['DATE'], format='%Y-%m-%d %H:%M:%S', errors='coerce')
@@ -45,7 +45,7 @@ class AnalyseSheep():
         df.drop(columns=['TimeDifference1', 'TimeDifference2'], inplace=True)
 
 
-        # Get the data betwwen those two dates
+        # Get the data between those two dates
         extracted_data = df.iloc[closest_index1:closest_index2 + 1]
         extracted_data.reset_index(drop=True, inplace=True)
 

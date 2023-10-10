@@ -49,6 +49,7 @@ class ProcessData():
                         day_counter += 1
 
         if not found_day_15:
+            df_queue.put([])
             return []
         try:
             combined_df = pd.concat(dfs, ignore_index=True)
