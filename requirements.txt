@@ -1,22 +1,33 @@
+altgraph==0.17.4
+Babel==2.12.1
+colour==0.1.5
 contourpy==1.1.1
 cycler==0.11.0
 fonttools==4.42.1
+importlib-metadata==6.8.0
+importlib-resources==6.1.0
 kiwisolver==1.4.5
 llvmlite==0.40.1
+macholib==1.16.3
 matplotlib==3.7.3
 numba==0.57.1
 numpy==1.24.4
 packaging==23.1
 pandas==2.0.3
 Pillow==10.0.1
+psutil==5.9.5
+pyinstaller==6.0.0
+pyinstaller-hooks-contrib==2023.9
 pyparsing==3.1.1
 python-dateutil==2.8.2
+pyttk==0.3.2
+pywin32==306; platform_system=="Windows"
 pytz==2023.3
 six==1.16.0
 tk==0.1.0
-tzdata==2023.3
-tkmacosx==1.0.5
 tkcalendar==1.6.1
 tkfilebrowser==2.3.2
-pyttk==0.3.2
-pywin32==306; platform_system=="Windows"
+tkmacosx==1.0.5
+tkTimePicker==2.0.2
+tzdata==2023.3
+zipp==3.17.0

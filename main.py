@@ -364,17 +364,17 @@ if __name__ == "__main__":
     plot_text = Label(graph_frame,  text="N/A", fg='black', bg="white", font="Arial 12")
     plot_text.grid(sticky = W, row=3, column=1, rowspan=2)
 
-    operation_status = Label(graph_frame,  text="No operation selected", fg='black', bg="white", font="Arial 12")
-    operation_status.grid(sticky = S, row=5, column=0, padx=(10), pady=(5))
+    Label(graph_frame,  text="Average Hertz", fg='#27348b',bg='white', font="Arial 12 bold").grid(sticky=W, padx=(10), rowspan=2)
+    avg_hertz = Label(graph_frame,  text="N/A", fg='black', bg="white", font="Arial 12")
+    avg_hertz.grid(sticky = W, row=6, column=1)
 
-    avg_hertz = Label(graph_frame,  text="N/A", fg='black', bg='white', font="Arial 12")
-    avg_hertz.place(rely=1.0, relx=1.0, x=-420, y=-60, anchor=SE)
+    operation_status = Label(graph_frame,  text="No operation selected", fg='black', bg="white", font="Arial 12")
+    operation_status.grid(sticky = S, row=7, column=0, padx=(10), pady=(5))
 
     plot_amp = Button(graph_frame, text="PLOT AMPLITUDE SUM", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', state=DISABLED,  borderless=True, padx=5, pady=10,command=plot_amplitude)
     save_analyse_data = Button(graph_frame, text="SAVE PLOT DATA TO FILE", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='',  state=DISABLED, borderless=True, padx=5, pady=10,command=save_plot_data)
     export_pdf_button = Button(graph_frame, text="EXPORT PLOT", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', state=DISABLED, borderless=True, padx=5, pady=10, command=export_plot)
     generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 10", background='#fdc300', activebackground='#a2c03b', focuscolor='', state=DISABLED, borderless=True, padx=0, pady=10, command=get_report)
-    Label(graph_frame, text="Average Hertz:",fg='#27348b',bg='white', font="Arial 12 bold").place(rely=1.0, relx=1.0, x=-450, y=-60, anchor=SE)
     export_pdf_button.place(rely=1.0, relx=1.0, x=-430, y=-10, anchor=SE)
     plot_amp.place(rely=1.0, relx=1.0, x=-260, y=-10, anchor=SE)
     save_analyse_data.place(rely=1.0, relx=1.0, x=-70, y=-10, anchor=SE)
