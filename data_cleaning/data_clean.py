@@ -5,6 +5,7 @@ import threading
 import time
 from tkinter import *
 from tkinter import ttk
+from datetime import datetime
 
 import numpy as np
 import pandas as pd
@@ -48,6 +49,7 @@ class ProcessData():
                         day_counter += 1
 
         if not found_day_15:
+            df_queue.put([])
             return []
         try:
             combined_df = pd.concat(dfs, ignore_index=True)

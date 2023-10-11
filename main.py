@@ -7,6 +7,7 @@ import webbrowser
 from queue import Queue
 from tkinter import *
 from tkinter import filedialog, messagebox, ttk
+from datetime import datetime
 
 from PIL import Image, ImageTk
 from tkcalendar import DateEntry
@@ -24,6 +25,7 @@ from data_cleaning.data_clean import ProcessData
 clean_data_folder = None
 sheep_file = None
 analysed_sheep = None
+folder_paths = []
 system = platform.system()
 
 global_var_lock = threading.Lock()
@@ -47,16 +49,17 @@ def app_root_path():
 # New function for the compiled program
 
 
-def get_folders(folder_paths):
+def get_folders():
+    global folder_paths
+    if folder_paths != []:
+        folder_paths = []
+
     folder_paths.append(askopendirnames(title="Select Directory"))
-    change_mode("data cleaning")
     files = []
     
     for tuple in folder_paths:
         for folder_path in tuple:
             files_in_folder = os.listdir(folder_path)
-            print("Files in Folder:")
-            print(files_in_folder)
 
             #Checking that selected folders contain more than 1 file 
             if len(files_in_folder) <= 1:
@@ -71,72 +74,11 @@ def get_folders(folder_paths):
     change_file(files)
     
     if len(folder_paths) == 1 and folder_paths[0] != ():
-        load_files_button["state"] = DISABLED
+        change_mode("data cleaning")
         clean_files_button["state"] = NORMAL
-    return folder_paths
 
-
-# MULTITHREADED: Batch Cleaning
-def clean_files_thread(folder_path):
-    global_var_lock.acquire()
-    global clean_data_folder
-    try:
-        # process_data = ProcessData_Threaded()
-        # combined_data = process_data.read_data(folder_path)
-
-        #Get sheep name for clean file name
-
-        folder_path_list = folder_path.rsplit("/", 1)
-        path_to_folder = folder_path_list[0]
-        sheep_name = folder_path_list[1]
-
-        print("Currently cleaning folder: "+sheep_name)
-        # cleaned_data = process_data.start_clean_data(combined_data)
-        combined_data = []  # Free memory
-        print("Completed cleaning for folder "+sheep_name)
-
-        clean_data_folder = path_to_folder + "/cleaned_data_batch"
-        if not os.path.isdir(clean_data_folder):
-            os.mkdir(clean_data_folder)
-
-        print("Currently writing CSV for folder: "+sheep_name)
-        # process_data.start_save_to_csv(cleaned_data, clean_data_folder + "/" + sheep_name + ".csv")
-        print("Completed writing CSV for folder: "+sheep_name)
-        cleaned_data = []  # Free memory
-    finally:
-    # Release the lock after modifying the array
-        global_var_lock.release()
-
-
-def clean_files(folder_paths):
-    global clean_data_folder
-
-    print("Folder paths in clean file:")
-    print(folder_paths)
-
-    threads = []
-    start_time = time.time()
-
-    for tuple in folder_paths:
-        for folder_path in tuple:
-            thread = threading.Thread(target=clean_files_thread, args=(folder_path,))
-            threads.append(thread)
-            thread.start()
-
-        for thread in threads:
-            thread.join()
-
-        end_time = time.time()
-        elapsed_time = end_time - start_time
-        print(f"Elapsed Threading Time: {elapsed_time} seconds")
-
-    messagebox.showinfo("Success", "Successfully cleaned selected data folders.")
-    print(clean_data_folder)
-    webbrowser.open('file:///'+ clean_data_folder)
-    multithread_reset()
-
-
-def unthreaded_clean_files(root, folder_paths):
+def unthreaded_clean_files(root):
+    global folder_paths
     process_data = ProcessData()
     
     for tuple in folder_paths:
@@ -148,11 +90,12 @@ def unthreaded_clean_files(root, folder_paths):
 
             path_to_folder = folder_path_list[0]
             sheep_name = folder_path_list[1]
-            
+
             combined_data = process_data.start_read_data(path, root)
             if len(combined_data) > 0:
                 print("Cleaning data in progress")
                 cleaned_data = process_data.start_clean_data(root, combined_data)
+
                 combined_data = [] # free memory
                 print("Completed data cleaning")
             
@@ -165,102 +108,112 @@ def unthreaded_clean_files(root, folder_paths):
                 process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", root)
                 print("Completed writing")
                 cleaned_data = [] # Free memory
-                print(clean_data_folder)
 
-    messagebox.showinfo("Success", "Successfully cleaned selected data files")
+                messagebox.showinfo("Success", "Successfully cleaned selected data files")
+                webbrowser.open('file:///'+path_to_folder)
+            else:
+                messagebox.showerror("Error", "Folder does not contain a file with a starting date. Please try again.")
+                label_restart()
+    label_restart()
+
+def label_restart():
+    global folder_paths
+    folder_paths = [] #reset folder_paths for next load of folders
+    change_file(folder_paths)
+    change_mode("N/A")
+    load_files_button["state"] = NORMAL
+    clean_files_button["state"] = DISABLED
 
 def update_status(status_text):
     operation_status.config(text=status_text)
 
-
-def multithread_reset():
-    global folder_paths
-    folder_paths = [] # FREE THREADING FILE PATHS
-    load_files_button["state"] = NORMAL
-    clean_files_button["state"] = DISABLED
-
-
 def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end_minute):
-
         global analysed_sheep
         global sheep_file
         formatted_start = str(start_date) + " " + start_hour + ":" + start_minute + ":" + "00"
         formatted_end = str(end_date) + " " + end_hour + ":" + end_minute + ":" + "00"
 
         if (start_hour != "Hour" and end_hour != "Hour" and start_minute != "Mins" and end_minute != "Mins"):
+            # Convert the date-time strings to datetime objects
+            date_time1 = datetime.strptime(formatted_start, "%Y-%m-%d %H:%M:%S")
+            date_time2 = datetime.strptime(formatted_end, "%Y-%m-%d %H:%M:%S")
         
-            update_status("Please Wait... Plotting data")
+            # Compare the datetime objects
+            if date_time1 >= date_time2:
+                messagebox.showinfo("Failure", "The first date is not before or the same as the second date. Please try again.")
+            else:
+                update_status("Please Wait... Plotting data")
+                plot_amp["state"] = NORMAL
+                save_analyse_data["state"] = NORMAL
+                export_pdf_button["state"] = NORMAL
+                generate_report_button["state"] = NORMAL
 
-            analysed_sheep = AnalyseSheep()
-            analysed_sheep.plot_mode = "XYZ"
-            current_plot("XYZ")
+                analysed_sheep = AnalyseSheep()
+                analysed_sheep.plot_mode = "XYZ"
+                current_plot("XYZ")
             
-            analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
-            update_status("Plotted data successfully")
+                analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
+                update_status("Plotted data successfully")
+                avg_hertz.config(text=analysed_sheep.avg_hertz)
         else:
             messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
-    
 
+#Calendar defocus so it doesn't highlight the calendar when pressed
 def defocus(event):
     event.widget.master.focus_set()
     event.widget.master.selection_clear()
-
 
 # Selects and holds a sheep csv file from a cleaned sheep directory.
 def select_sheep():
     global sheep_file
     global analysed_sheep
     analysed_sheep = None # Remove the existing instance of "AnalyseSheep"
+    file_path = None
     file_path = askopenfilename(title="Select a cleaned data file", filetypes=[("CSV files", "*.csv")]) # filedialog.askdirectory()
-    change_mode("data analysis")
-    
-    try:
-        file_name = os.path.basename(file_path)
-        if file_name.startswith("GPS"):
-            sheep_file = file_path
-            start_analysis_button["state"] = NORMAL
-            change_file([file_name]) # Changes the file name display
-        else:
-            messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
+    if len(file_path) != 0:
+        try:
+            file_name = os.path.basename(file_path)
+            if file_name.startswith("GPS"):
+                sheep_file = file_path
+                start_analysis_button["state"] = NORMAL
+                change_file([file_name]) # Changes the file name display
+                change_mode("data analysis")
+            else:
+                messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
+                return
+        except:
             return
-    except:
+    else:
         return
 
-
-# Updates the intereior content of the current file label.
+# Updates the interior content of the current file label.
 def change_file(filenames):
     l = len(filenames)
     if l == 0:
-        currentFile.config(text="N/A")
+        current_file.config(text="N/A")
     elif l == 1:
-        currentFile.config(text=filenames[0])
-    elif l > 1 and l < 6:
-        s = "["
+        current_file.config(text=filenames[0])
+    elif l > 1 and l < 4:
+        s = ""
         for file in filenames:
-            s += f"{file}, " 
-        s = f"{s[:-2]}]"
-        currentFile.config(text=s)
-    elif l > 5:
-        s = "["
-        
-        i = 0
-        while i < 5:
-            s += f"{filenames[i]}, "
-            i +=1
-            
-        s = f"{s}...] + ({l-5}) more."
-        currentFile.config(text=s)
+            s += f"{file[1]}, " 
+        s = f"{s[:-2]}"
+        current_file.config(text=s)
+    elif l > 3:
+        s = ""
+        s = f"{filenames[0][1]}... + ({l-1}) more."
+        current_file.config(text=s)
     else:
-        currentFile.config(text="N/A")
+        current_file.config(text="N/A")
         print("Error: invalid filenames")
 
 
 # Updates the interior content of the current mode label.
 def change_mode(mode):
-    modes = ["data cleaning", "data analysis"]
+    modes = ["data cleaning", "data analysis", "n/a"]
     
     if mode.lower() in modes:
-        currentMode.config(text=mode.title())
+        current_mode.config(text=mode.title())
 
 def current_plot(plot_type):
     types = ["Amplitude", "XYZ"]
@@ -296,13 +249,9 @@ def export_plot():
     analysed_sheep.export_plot()
     operation_status.config(text="Exported successfully")
 
-
-
 ## Application starting point
 ## Run python3 main.py or python main.py
 if __name__ == "__main__":
-    folder_paths = []
-
     root = Tk()
     root.title("Sheep Behavious Analysis")
     root.config(bg="red")
@@ -320,8 +269,8 @@ if __name__ == "__main__":
 
     #Data Processing
     Label(menu_frame,  text="Data Processing", bg='#27348b', fg='white', font="Arial 16").grid(row=0, column=0, padx=20, pady=10)
-    load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 12 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=5, pady=15, command = lambda: get_folders(folder_paths))
-    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 12 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: unthreaded_clean_files(root, folder_paths))
+    load_files_button = Button(menu_frame, text="LOAD DIRECTORY", font="Arial 12 bold", background='#fdc300', activebackground='#fdc300', focuscolor='', borderless=True, padx=5, pady=15, command=get_folders)
+    clean_files_button = Button(menu_frame, text="CLEAN DIRECTORY", font="Arial 12 bold", background='#a2c03b', activebackground='#a2c03b', focuscolor='', borderless=True, state=DISABLED, padx=0, pady=15, command = lambda: unthreaded_clean_files(root))
     load_files_button.grid(row=1, column=0, rowspan=2)
     clean_files_button.grid(row=3, rowspan=2, column=0)
     
@@ -376,9 +325,6 @@ if __name__ == "__main__":
     end_hours = ttk.Combobox(menu_frame, textvariable=end_hour, state="readonly", values=hours_list, width=5)
     end_hours.grid(row=14, column=0, pady=(10, 0))
 
-    # colon2 = Label(menu_frame,  text=":", bg='#27348b', fg='white', font="Arial 12")
-    # colon2.grid(row=14, column=0, padx=(150, 0))
-
     end_minute = StringVar(menu_frame)
     end_minute.set("Mins")
     end_minutes = ttk.Combobox(menu_frame, textvariable=end_minute, state="readonly", values=minutes_list, width=5)
@@ -409,22 +355,26 @@ if __name__ == "__main__":
 
     #Graph labels and buttons
     Label(graph_frame,  text="Current File(s)", fg='#27348b',bg='white', font="Arial 12 bold").grid(sticky=W, padx=(10), pady=(10, 5), rowspan=2)
-    currentFile = Label(graph_frame,  text="N/A", fg='black', bg='white', font="Arial 12")
-    currentFile.grid(sticky = W, row=0, column=1, rowspan=2)
+    current_file = Label(graph_frame,  text="N/A", fg='black', bg='white', font="Arial 12")
+    current_file.grid(sticky = W, row=0, column=1, rowspan=2)
     Label(graph_frame,  text="Current Mode", fg='#27348b', bg="white", font="Arial 12 bold").grid(sticky = W, row=2, column=0, padx=(10))
-    currentMode = Label(graph_frame,  text="N/A", fg='black', bg="white", font="Arial 12")
-    currentMode.grid(sticky = W, row=2, column=1, rowspan=2)
+    current_mode = Label(graph_frame,  text="N/A", fg='black', bg="white", font="Arial 12")
+    current_mode.grid(sticky = W, row=2, column=1, rowspan=2)
     Label(graph_frame,  text="Current Plot", fg='#27348b', bg="white", font="Arial 12 bold").grid(sticky = W, row=4, column=0, padx=(10), pady=(5))
     plot_text = Label(graph_frame,  text="N/A", fg='black', bg="white", font="Arial 12")
     plot_text.grid(sticky = W, row=3, column=1, rowspan=2)
 
-    operation_status = Label(graph_frame,  text="No operation selected", fg='black', bg="white", font="Arial 12")
-    operation_status.grid(sticky = S, row=5, column=0, padx=(10), pady=(5))
+    Label(graph_frame,  text="Average Hertz", fg='#27348b',bg='white', font="Arial 12 bold").grid(sticky=W, padx=(10), rowspan=2)
+    avg_hertz = Label(graph_frame,  text="N/A", fg='black', bg="white", font="Arial 12")
+    avg_hertz.grid(sticky = W, row=6, column=1)
 
-    plot_amp = Button(graph_frame, text="PLOT AMPLITUDE SUM", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10,command=plot_amplitude)
-    save_analyse_data = Button(graph_frame, text="SAVE PLOT DATA TO FILE", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10,command=save_plot_data)
-    export_pdf_button = Button(graph_frame, text="EXPORT PLOT", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', borderless=True, padx=5, pady=10, command=export_plot)
-    generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 10", background='#fdc300', activebackground='#a2c03b', focuscolor='', borderless=True, padx=0, pady=10, command=get_report)
+    operation_status = Label(graph_frame,  text="No operation selected", fg='black', bg="white", font="Arial 12")
+    operation_status.grid(sticky = S, row=7, column=0, padx=(10), pady=(5))
+
+    plot_amp = Button(graph_frame, text="PLOT AMPLITUDE SUM", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', state=DISABLED,  borderless=True, padx=5, pady=10,command=plot_amplitude)
+    save_analyse_data = Button(graph_frame, text="SAVE PLOT DATA TO FILE", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='',  state=DISABLED, borderless=True, padx=5, pady=10,command=save_plot_data)
+    export_pdf_button = Button(graph_frame, text="EXPORT PLOT", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', state=DISABLED, borderless=True, padx=5, pady=10, command=export_plot)
+    generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 10", background='#fdc300', activebackground='#a2c03b', focuscolor='', state=DISABLED, borderless=True, padx=0, pady=10, command=get_report)
     export_pdf_button.place(rely=1.0, relx=1.0, x=-430, y=-10, anchor=SE)
     plot_amp.place(rely=1.0, relx=1.0, x=-260, y=-10, anchor=SE)
     save_analyse_data.place(rely=1.0, relx=1.0, x=-70, y=-10, anchor=SE)
