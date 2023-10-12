@@ -16,13 +16,14 @@ def find_start_and_end_data(data_file, start_date, end_date):
     start_date = datetime.strptime(start_date, '%Y-%m-%d %H:%M:%S')
     end_date = datetime.strptime(end_date, '%Y-%m-%d %H:%M:%S')
     df['DATE'] = pd.to_datetime(df['DATE'], format='%Y-%m-%d %H:%M:%S', errors='coerce')
-
+  
     # Calculate the time difference for each given date and add them as new columns
     df['TimeDifference1'] = (df['DATE'] - start_date).abs().dt.total_seconds()
     df['TimeDifference2'] = (df['DATE'] - end_date).abs().dt.total_seconds()
 
     # Sort the DataFrame by the time differences for the given dates and get the closest date
     # TODO: What happens when it cant find a date?
+    pd.options.display.colheader_justify = 'center'
 
     time_diff_df = df.sort_values(by='TimeDifference1')
     closest_index1 = time_diff_df.index[0]
@@ -61,13 +62,18 @@ def calculate_dates(data, avg_hertz):
     Since we only have dates for every minute we need to calculate the dates inbetween based on the average hertz
     '''
     initial_date = data['DATE'].iloc[0]
+    print(initial_date)
     num_rows = len(data)
+    print(num_rows)
     
     time_diff_seconds = 1 / avg_hertz
+    print(time_diff_seconds)
     
     timedelta_array = np.arange(num_rows) * pd.Timedelta(seconds=time_diff_seconds)
-    
+    print(timedelta_array)
     data['DATE'] = initial_date + timedelta_array
+    print(data)
+
 
     return data
 
@@ -121,10 +127,3 @@ def start_analysis(data_file, start_date, end_date):
     avg_hertz = get_average_hertz_per_second(data)
     data = calculate_dates(data, avg_hertz)
     plot(data)
-
-
-# TODO: Remove hard coded data 
-start_date = '2023-02-16 13:05:35'
-end_date = '2023-02-16 13:10:00'
-data_file = 'test_data/cleaned_data/GPS0028.csv'
-start_analysis(data_file, start_date, end_date)
