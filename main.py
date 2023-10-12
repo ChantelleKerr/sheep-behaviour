@@ -127,6 +127,13 @@ def label_restart():
 def update_status(status_text):
     operation_status.config(text=status_text)
 
+def analysis_progress_bar():
+    update_status("Please Wait... Plotting data")
+    plot_amp["state"] = NORMAL
+    save_analyse_data["state"] = NORMAL
+    export_pdf_button["state"] = NORMAL
+    generate_report_button["state"] = NORMAL
+
 def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end_minute):
         global analysed_sheep
         global sheep_file
@@ -142,18 +149,16 @@ def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end
             if date_time1 >= date_time2:
                 messagebox.showinfo("Failure", "The first date is not before or the same as the second date. Please try again.")
             else:
-                update_status("Please Wait... Plotting data")
-                plot_amp["state"] = NORMAL
-                save_analyse_data["state"] = NORMAL
-                export_pdf_button["state"] = NORMAL
-                generate_report_button["state"] = NORMAL
+                pb_thread = threading.Thread(target=analysis_progress_bar)
+                pb_thread.start()
+                while pb_thread.is_alive():
+                    root.update()
 
                 analysed_sheep = AnalyseSheep()
                 analysed_sheep.plot_mode = "XYZ"
                 current_plot("XYZ")
-            
-                analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
                 update_status("Plotted data successfully")
+                analysed_sheep.start_analysis(sheep_file, formatted_start, formatted_end)
                 avg_hertz.config(text=analysed_sheep.avg_hertz)
         else:
             messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
