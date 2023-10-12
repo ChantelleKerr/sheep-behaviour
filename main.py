@@ -1,13 +1,15 @@
 import os
 import platform
 import sys
+import csv
+import pandas as pd
 import threading
 import time
 import webbrowser
 from queue import Queue
 from tkinter import *
 from tkinter import filedialog, messagebox, ttk
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from PIL import Image, ImageTk
 from tkcalendar import DateEntry
@@ -178,6 +180,7 @@ def select_sheep():
                 start_analysis_button["state"] = NORMAL
                 change_file([file_name]) # Changes the file name display
                 change_mode("data analysis")
+                get_date(file_path)
             else:
                 messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
                 return
@@ -236,7 +239,6 @@ def plot_amplitude():
     analysed_sheep.plot_amplitude()
     operation_status.config(text="Plotting Amplitude Completed")
 
-
 def save_plot_data():
     operation_status.config(text="Please Wait... Saving plot data to CSV")
     global analysed_sheep
@@ -248,6 +250,26 @@ def export_plot():
     operation_status.config(text="Exporting plot")
     analysed_sheep.export_plot()
     operation_status.config(text="Exported successfully")
+
+def get_date(file_path):
+    df = pd.read_csv(file_path)
+    string_date = df['DATE'].iloc[0]
+
+    date_time = datetime.strptime(string_date, '%Y-%m-%d %H:%M:%S')
+    set_start_hour = date_time.strftime("%H")
+    set_start_minute = date_time.strftime("%M")
+
+    #Add 15min to start date to set up as end date
+    end_date_time = date_time + timedelta(minutes = 15)
+    set_end_hour = end_date_time.strftime("%H")
+    set_end_minute = end_date_time.strftime("%M")
+
+    start_date.set_date(date_time)
+    start_hour.set(set_start_hour)
+    start_minute.set(set_start_minute)
+    end_date.set_date(end_date_time)
+    end_hour.set(set_end_hour)
+    end_minute.set(set_end_minute)
 
 ## Application starting point
 ## Run python3 main.py or python main.py
