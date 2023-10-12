@@ -4,10 +4,10 @@ import sys
 import threading
 import time
 import webbrowser
+from datetime import datetime
 from queue import Queue
 from tkinter import *
 from tkinter import filedialog, messagebox, ttk
-from datetime import datetime
 
 from PIL import Image, ImageTk
 from tkcalendar import DateEntry
@@ -249,6 +249,11 @@ def export_plot():
     analysed_sheep.export_plot()
     operation_status.config(text="Exported successfully")
 
+
+def plot_accel():
+    global analysed_sheep
+    analysed_sheep.plot()
+
 ## Application starting point
 ## Run python3 main.py or python main.py
 if __name__ == "__main__":
@@ -375,9 +380,11 @@ if __name__ == "__main__":
     save_analyse_data = Button(graph_frame, text="SAVE PLOT DATA TO FILE", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='',  state=DISABLED, borderless=True, padx=5, pady=10,command=save_plot_data)
     export_pdf_button = Button(graph_frame, text="EXPORT PLOT", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', state=DISABLED, borderless=True, padx=5, pady=10, command=export_plot)
     generate_report_button = Button(graph_frame, text="GENERATE REPORT", font="Arial 10", background='#fdc300', activebackground='#a2c03b', focuscolor='', state=DISABLED, borderless=True, padx=0, pady=10, command=get_report)
-    export_pdf_button.place(rely=1.0, relx=1.0, x=-430, y=-10, anchor=SE)
-    plot_amp.place(rely=1.0, relx=1.0, x=-260, y=-10, anchor=SE)
-    save_analyse_data.place(rely=1.0, relx=1.0, x=-70, y=-10, anchor=SE)
+    plot_accelerometer_button = Button(graph_frame, text="PLOT ACCELEROMETER", font="Arial 10", background='#fdc300', activebackground='#a2c03b', focuscolor='', state=DISABLED, borderless=True, padx=0, pady=10, command=plot_accel)
+    export_pdf_button.place(rely=1.0, relx=1.0, x=-410, y=-10, anchor=SE)
+    plot_amp.place(rely=1.0, relx=1.0, x=-240, y=-10, anchor=SE)
+    save_analyse_data.place(rely=1.0, relx=1.0, x=-220, y=-60, anchor=SE)
     generate_report_button.place(rely=1.0, relx=1.0, x=-70, y=-60, anchor=SE)
+    plot_accelerometer_button.place(rely=1.0, relx=1.0, x=-70, y=-10, anchor=SE)
 
     root.mainloop()
