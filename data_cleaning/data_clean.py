@@ -9,8 +9,13 @@ from datetime import datetime
 
 import numpy as np
 import pandas as pd
+# import logging necessary file
+from logger_config import get_logger, log_func_call
+#init the logger
+logger = get_logger(__name__)
 
 class ProcessData():
+    @log_func_call()
     def read_data(self, folder_path, df_queue):
         dfs = []
         file_names = sorted(os.listdir(folder_path))
@@ -28,6 +33,7 @@ class ProcessData():
             
             if file.endswith('.txt'):
                 print(f'Processing: {file}')
+                logger.info(f'Processing: {file}') # process logging
                 file_path = os.path.join(folder_path, file)
                 if os.path.getsize(file_path) > 0:
 
@@ -55,8 +61,10 @@ class ProcessData():
             combined_df = pd.concat(dfs, ignore_index=True)
         except:
             print("Error: Not enough memory on disk or invalid files in directory")
+            logger.error("Error: Not enough memory on disk or invalid files in directory __at class data_clean, read_data function")
         df_queue.put(combined_df)
 
+    @log_func_call()
     def start_read_data(self, folder_path, window):
         df_queue = queue.Queue()
         label = Label(window, text="Reading: ", font=("Helvetica", 16)) 
@@ -80,7 +88,7 @@ class ProcessData():
 
         return result_from_thread
     
-
+    @log_func_call()
     def clean_data(self, df, df_queue):
 
         try:
@@ -129,8 +137,9 @@ class ProcessData():
 
         except:
             print("Error: Cannot clean file")
+            logger.error("Error: Cannot clean file __at class data_clean, clean_data function")
 
-
+    @log_func_call()
     def start_clean_data(self, window, df):
         df_queue = queue.Queue()
 
@@ -155,10 +164,11 @@ class ProcessData():
 
         return result_from_thread
 
-
+    @log_func_call()
     def save_to_csv(self, df, file_name):
         df.to_csv(file_name, index=False)
 
+    @log_func_call()
     def start_save_to_csv(self, cleaned_data, path, window):
 
         label = Label(window, text="Writing to CSV: ", font=("Helvetica", 16)) 

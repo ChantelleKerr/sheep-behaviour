@@ -7,6 +7,10 @@ import os
 import csv
 import copy
 
+# import logging necessary file
+from logger_config import get_logger, log_func_call
+#init the logger
+logger = get_logger(__name__)
 
 class AnalyseSheep():
     def __init__(self):
@@ -19,6 +23,7 @@ class AnalyseSheep():
         self.plot_mode = None
         self.avg_hertz = None
 
+    @log_func_call()
     def find_start_and_end_data(self, data_file, start_date, end_date):
         """
         Finds the rows nearest to start and end dates and return the data inbetween those dates.
@@ -51,7 +56,7 @@ class AnalyseSheep():
 
         return extracted_data
 
-
+    @log_func_call()
     def get_average_hertz_per_second(self, data):
         """
         Calculate the average hertz across every minute to find the average hertz across every second
@@ -66,8 +71,7 @@ class AnalyseSheep():
 
         self.avg_hertz = round(hertz_per_second.mean())
         
-
-
+    @log_func_call()
     def calculate_dates(self):
         '''
         Since we only have dates for every minute we need to calculate the dates inbetween based on the average hertz
@@ -81,7 +85,7 @@ class AnalyseSheep():
         
         self.data['DATE'] = initial_date + timedelta_array
 
-
+    @log_func_call()
     def plot(self, df):
         x_accel = df.iloc[:, 0].tolist()
         y_accel = df.iloc[:, 1].tolist()
@@ -116,7 +120,7 @@ class AnalyseSheep():
         self.current_plot = plt
         plt.show()
 
-
+    @log_func_call()
     def plot_amplitude(self):
         # Normalise the data (shift mean to zero)
         self.data[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']] = (self.data[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']] - self.data[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']].mean()) / self.data[['ACCEL_X', 'ACCEL_Y', 'ACCEL_Z']].std()
@@ -140,7 +144,7 @@ class AnalyseSheep():
         self.current_plot = plt
         plt.show()
 
-
+    @log_func_call()
     def start_analysis(self, data_file, start_date, end_date):
         '''
         Function that is run when the "Start Analysis" button is pressed
@@ -155,7 +159,7 @@ class AnalyseSheep():
         self.sheep = os.path.basename(self.folder_path).split(".")[0]
         self.plot(self.data)
 
-
+    @log_func_call()
     def generate_report(self):
         accel_data = self.data.iloc[:, :3]
 
@@ -186,6 +190,7 @@ class AnalyseSheep():
 
     # Used to write analysed data to a file
     # Has dates in all rows 
+    @log_func_call()
     def write_to_file(self):
         path = os.path.dirname(self.folder_path)
         plot_dir = os.path.join(path, "plots", self.plot_mode)
@@ -193,8 +198,10 @@ class AnalyseSheep():
         filename = f"{self.sheep}_plot_data.csv"
         file_path = os.path.join(plot_dir, filename)
         self.data.to_csv(file_path, index=False)
+        logger.info(f"Data written to {file_path}") # export logging
 
     # The plot must be open!
+    @log_func_call()
     def export_plot(self):
         path = os.path.dirname(self.folder_path)
         plot_dir = os.path.join(path, "plots", self.plot_mode)
@@ -203,6 +210,7 @@ class AnalyseSheep():
         file_path = os.path.join(plot_dir, filename)
         if self.current_plot:
             self.current_plot.savefig(file_path, format='png')
+            logger.info(f"Plot exported to {file_path}") # plot export logging
 
 
 
