@@ -9,9 +9,8 @@ from tkinter import ttk
 import numpy as np
 import pandas as pd
 
-
 class ProcessData():
-    def read_data(self, folder_path, read_pb, window):
+    def read_data(self, folder_path, df_queue):
         dfs = []
         file_names = sorted(os.listdir(folder_path))
         combined_df = []
@@ -20,13 +19,6 @@ class ProcessData():
         found_day_15 = False
         day_counter = 0
         MAX_EXPERIMENT_DAYS = 34
-
-        num_files = len(file_names)
-        increment = 100 / num_files
-        
-        label = Label(window, text="Reading: ", font=("Helvetica", 16)) 
-        label.place(x=120, y=10)
-        read_pb.place(x=120, y=40, width=200)
 
         for idx, file in enumerate(file_names):
             # We only want to process 34 days worth of files
@@ -37,9 +29,6 @@ class ProcessData():
                 print(f'Processing: {file}')
                 file_path = os.path.join(folder_path, file)
                 if os.path.getsize(file_path) > 0:
-                    if (idx < MAX_EXPERIMENT_DAYS):
-                        read_pb['value'] += increment
-                        window.update()
 
                     if header is None:
                         df = pd.read_csv(file_path)
@@ -61,12 +50,33 @@ class ProcessData():
         if not found_day_15:
             return []
         try:
-            read_pb.place_forget()  
-            label.place_forget()
             combined_df = pd.concat(dfs, ignore_index=True)
         except:
-            print("Error: Invalid files in directory")
-        return combined_df
+            print("Error: Not enough memory on disk or invalid files in directory")
+        df_queue.put(combined_df)
+
+    def start_read_data(self, folder_path, window):
+        df_queue = queue.Queue()
+        label = Label(window, text="Reading: ", font=("Helvetica", 16)) 
+        label.place(relx=.5, rely=.5, x=100, y=-30, anchor=CENTER)   
+        read_pb = ttk.Progressbar(window, mode="indeterminate", style="TProgressbar")
+        read_pb.place(relx=.5, rely=.5, x=100, anchor=CENTER, width=200)
+
+        read_pb.start()
+
+        thread = threading.Thread(target=ProcessData.read_data, args=(self, folder_path, df_queue))
+        thread.start()
+
+        while thread.is_alive():
+            window.update()
+
+        result_from_thread = df_queue.get()
+
+        time.sleep(0.5)
+        read_pb.destroy()  
+        label.destroy()
+
+        return result_from_thread
     
 
     def clean_data(self, df, df_queue):
@@ -119,12 +129,13 @@ class ProcessData():
             print("Error: Cannot clean file")
 
 
-    def start_clean_data(self, clean_pb, window, df):
+    def start_clean_data(self, window, df):
         df_queue = queue.Queue()
 
         label = Label(window, text="Cleaning: ", font=("Helvetica", 16)) 
-        label.place(x=120, y=10)        
-        clean_pb.place(x=120, y=40, width=200)
+        label.place(relx=.5, rely=.5, x=100, y=-30, anchor=CENTER)   
+        clean_pb = ttk.Progressbar(window, mode="indeterminate", style="TProgressbar")     
+        clean_pb.place(relx=.5, rely=.5, x=100, anchor=CENTER, width=200)
 
         clean_pb.start()
 
@@ -146,13 +157,12 @@ class ProcessData():
     def save_to_csv(self, df, file_name):
         df.to_csv(file_name, index=False)
 
-
-
-    def start_save_to_csv(self, cleaned_data, path, write_pb, window):
+    def start_save_to_csv(self, cleaned_data, path, window):
 
         label = Label(window, text="Writing to CSV: ", font=("Helvetica", 16)) 
-        label.place(x=120, y=10)        
-        write_pb.place(x=120, y=40, width=200)
+        label.place(relx=.5, rely=.5, x=100, y=-30, anchor=CENTER)     
+        write_pb = ttk.Progressbar(window, mode="indeterminate", style="TProgressbar")   
+        write_pb.place(relx=.5, rely=.5, x=100, anchor=CENTER, width=200)
 
         write_pb.start()
 
@@ -165,9 +175,3 @@ class ProcessData():
         time.sleep(0.5)
         write_pb.destroy()
         label.destroy()
-
-
-
-
-
-    
