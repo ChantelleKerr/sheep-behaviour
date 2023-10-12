@@ -50,6 +50,7 @@ def app_root_path():
 
 
 def get_folders():
+    label_restart()
     global folder_paths
     if folder_paths != []:
         folder_paths = []
@@ -123,6 +124,8 @@ def label_restart():
     change_mode("N/A")
     load_files_button["state"] = NORMAL
     clean_files_button["state"] = DISABLED
+    avg_hertz.config(text="N/A")
+    operation_status.config(text="No analysis operation selected")
 
 def update_status(status_text):
     operation_status.config(text=status_text)
@@ -170,6 +173,7 @@ def defocus(event):
 
 # Selects and holds a sheep csv file from a cleaned sheep directory.
 def select_sheep():
+    label_restart()
     global sheep_file
     global analysed_sheep
     analysed_sheep = None # Remove the existing instance of "AnalyseSheep"
@@ -287,8 +291,8 @@ if __name__ == "__main__":
     #Data Analysis
     Label(menu_frame,  text="Data Analysis", bg='#27348b', fg='white', font="Arial 16", justify="left").grid(row=6, column=0, pady=5)
     
-    Label(menu_frame,  text="Start Date:", bg='#27348b', justify="left", anchor="w", fg='white', font="Arial 12").grid(sticky = W, row=7, column=0)
-    start_date = DateEntry(menu_frame, background='#27348b', selectmode='day', date_pattern='yyyy-MM-dd')
+    Label(menu_frame,  text="Start Date:", bg='#27348b', justify="left", anchor="w", fg='white', font="Arial 12").grid(sticky = W, row=7, column=0, padx=(5))
+    start_date = DateEntry(menu_frame, background='#27348b', selectmode='day', date_pattern='yyyy-MM-dd', year=datetime.now().year,month=2,day=15)
     start_date._top_cal.overrideredirect(False)
     start_date.grid(row=7, column=0, padx=(60,0))
 
@@ -319,8 +323,8 @@ if __name__ == "__main__":
     start_minutes.bind("<FocusIn>", defocus)
     start_minutes.grid(row=9, column=0, padx=(130, 0))
 
-    Label(menu_frame,  text="End Date:", bg='#27348b', justify="left", anchor="w", fg='white', font="Arial 12").grid(sticky = W, row=13, column=0, pady=(20, 0))
-    end_date = DateEntry(menu_frame, background='#27348b', selectmode='day', date_pattern='yyyy-MM-dd')
+    Label(menu_frame,  text="End Date:", bg='#27348b', justify="left", anchor="w", fg='white', font="Arial 12").grid(sticky = W, row=13, column=0, pady=(20, 0), padx=(5))
+    end_date = DateEntry(menu_frame, background='#27348b', selectmode='day', date_pattern='yyyy-MM-dd', year=datetime.now().year,month=2,day=15)
     end_date._top_cal.overrideredirect(False)
     end_date.grid(row=13, column=0, padx=(63, 0), pady=(20, 0))
 
@@ -373,7 +377,7 @@ if __name__ == "__main__":
     avg_hertz = Label(graph_frame,  text="N/A", fg='black', bg="white", font="Arial 12")
     avg_hertz.grid(sticky = W, row=6, column=1)
 
-    operation_status = Label(graph_frame,  text="No operation selected", fg='black', bg="white", font="Arial 12")
+    operation_status = Label(graph_frame,  text="No analysis operation selected", fg='black', bg="white", font="Arial 12")
     operation_status.grid(sticky = S, row=7, column=0, padx=(10), pady=(5))
 
     plot_amp = Button(graph_frame, text="PLOT AMPLITUDE SUM", font="Arial 10", background='#27348b', activebackground='#fdc300', fg='white', focuscolor='', state=DISABLED,  borderless=True, padx=5, pady=10,command=plot_amplitude)
