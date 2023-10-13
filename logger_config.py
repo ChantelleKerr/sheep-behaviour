@@ -13,7 +13,7 @@ def app_root_path():
 log_file_path = os.path.join(app_root_path(), 'app.log')
 
 # Setup the basic logging configuration
-logging.basicConfig(filename=log_file_path, level=logging.DEBUG, 
+logging.basicConfig(filename=log_file_path, level=logging.INFO, 
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 def get_logger(name):

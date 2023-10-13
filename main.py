@@ -35,7 +35,7 @@ system = platform.system()
 global_var_lock = threading.Lock()
 
 # New function for the compiled program
-@log_func_call() # logging
+@log_func_call(logging.DEBUG) # logging
 def resource_path(relative_path):
     """Get the correct resource path for PyInstaller"""
     if getattr(sys, 'frozen', False):  # The application is frozen (compiled)
@@ -44,7 +44,7 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-@log_func_call() # logging
+@log_func_call(logging.DEBUG) # logging
 def app_root_path():
     """Get the root path of the application (script or packaged executable)"""
     if getattr(sys, 'frozen', False):  # The application is frozen (compiled)
@@ -59,7 +59,7 @@ with open(log_file_path, 'w') as f:
     pass
 logger = get_logger(__name__)
 
-@log_func_call() # start up logging
+@log_func_call(logging.DEBUG) # start up logging
 def get_folders():
     global folder_paths
     if folder_paths != []:
@@ -89,7 +89,7 @@ def get_folders():
         change_mode("data cleaning")
         clean_files_button["state"] = NORMAL
 
-@log_func_call() # start up logging
+@log_func_call(logging.DEBUG) # start up logging
 def unthreaded_clean_files(root):
     global folder_paths
     process_data = ProcessData()
@@ -134,7 +134,7 @@ def unthreaded_clean_files(root):
                 label_restart()
     label_restart()
 
-@log_func_call() # start up logging
+@log_func_call(logging.DEBUG) # start up logging
 def label_restart():
     global folder_paths
     folder_paths = [] #reset folder_paths for next load of folders
@@ -143,11 +143,11 @@ def label_restart():
     load_files_button["state"] = NORMAL
     clean_files_button["state"] = DISABLED
 
-@log_func_call() # start up logging
+@log_func_call(logging.DEBUG) # start up logging
 def update_status(status_text):
     operation_status.config(text=status_text)
 
-@log_func_call() # start up logging
+@log_func_call(logging.DEBUG) # start up logging
 def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end_minute):
         global analysed_sheep
         global sheep_file
@@ -182,13 +182,13 @@ def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end
             logger.warning("Incorrectly chosen DateTime for analysis.")
 
 #Calendar defocus so it doesn't highlight the calendar when pressed
-@log_func_call() # start up logging
+@log_func_call(logging.DEBUG) # start up logging
 def defocus(event):
     event.widget.master.focus_set()
     event.widget.master.selection_clear()
 
 # Selects and holds a sheep csv file from a cleaned sheep directory.
-@log_func_call() # start up logging
+@log_func_call(logging.DEBUG) # start up logging
 def select_sheep():
     global sheep_file
     global analysed_sheep
@@ -214,7 +214,7 @@ def select_sheep():
         return
 
 # Updates the interior content of the current file label.
-@log_func_call() # start up logging
+@log_func_call(logging.DEBUG) # start up logging
 def change_file(filenames):
     l = len(filenames)
     if l == 0:
@@ -238,14 +238,14 @@ def change_file(filenames):
 
 
 # Updates the interior content of the current mode label.
-@log_func_call() # start up logging
+@log_func_call(logging.DEBUG) # start up logging
 def change_mode(mode):
     modes = ["data cleaning", "data analysis", "n/a"]
     
     if mode.lower() in modes:
         current_mode.config(text=mode.title())
 
-@log_func_call() # start up logging
+@log_func_call(logging.DEBUG) # start up logging
 def current_plot(plot_type):
     types = ["Amplitude", "XYZ"]
     
@@ -253,14 +253,14 @@ def current_plot(plot_type):
         plot_text.config(text=plot_type)
 
 #### DATA ANALYSIS FUNCTIONS
-@log_func_call() # start up logging
+@log_func_call(logging.DEBUG) # start up logging
 def get_report():
     operation_status.config(text="Please Wait... Saving report to CSV")
     global analysed_sheep
     analysed_sheep.generate_report()
     operation_status.config(text="Saved to CSV successfully")
 
-@log_func_call() # start up logging
+@log_func_call(logging.DEBUG) # start up logging
 def plot_amplitude():
     operation_status.config(text="Please Wait... Plotting Amplitude")
     global analysed_sheep
@@ -269,14 +269,14 @@ def plot_amplitude():
     analysed_sheep.plot_amplitude()
     operation_status.config(text="Plotting Amplitude Completed")
 
-@log_func_call() # start up logging
+@log_func_call(logging.DEBUG) # start up logging
 def save_plot_data():
     operation_status.config(text="Please Wait... Saving plot data to CSV")
     global analysed_sheep
     analysed_sheep.write_to_file()
     operation_status.config(text="Saved to CSV successfully")
 
-@log_func_call() # start up logging
+@log_func_call(logging.DEBUG) # start up logging
 def export_plot():
     global analysed_sheep
     operation_status.config(text="Exporting plot")
