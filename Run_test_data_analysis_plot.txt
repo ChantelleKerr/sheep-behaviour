@@ -1,0 +1,5 @@
+import test_data_analysis_plot
+t = test_data_analysis_plot.Testdata_analysis_plot()
+t.setUp()
+t.test_prepare_data()
+t.test_function()
