@@ -13,7 +13,6 @@ cleanedFile = "test_data/sheep1_cleaned_data/sheep1.csv"
 with open(cleanedFile, 'r') as file:
     index = 0
     next(file)
-    next(file)
     
     startIndex = 1002000
     numLines = 500
@@ -47,9 +46,7 @@ with open(cleanedFile, 'r') as file:
             # magPrev = np.linalg.norm(prevVector)
             # mag = np.linalg.norm(vector)
             
-            prevVector[0] = vector[0]
-            prevVector[1] = vector[1]
-            prevVector[2] = vector[2]
+            prevVector = vector
             
             if index == startIndex:
                 #print(XYZ[-1], vector, "N/A", "N/A")

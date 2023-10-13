@@ -1,0 +1,105 @@
+import shutil
+from data_cleaning.data_clean import SheepData
+import unittest
+import os
+import pandas as pd
+import numpy as np
+from io import StringIO
+
+
+class TestProcessData(unittest.TestCase):
+    def test_ProcessData(self):
+        test_folder = 'test_data/sheepone'
+        os.makedirs(test_folder, exist_ok=True)
+
+        lines1 = ['ACCEL_X,ACCEL_Y,ACCEL_Z,LAT,LON,DAY,MONTH,YEAR,HOUR,MINUTE,SECOND',
+                  '*0,0,333,-32.034950,115.796829,11.0,2.0,2023.0,3.0,6.0,19.0',
+                  '-2048,-2048,-2048',
+                  '-175,300,500',
+                  '-185,301,600']
+        lines2 = ['*0,0,333',
+                  '-175,300,500',
+                  '-185,301,600',
+                  '0,0,0',
+                  '*0,0,333',
+                  '-175,300,500',
+                  '-185,301,600']
+        for i in range(3):
+            output_file = test_folder + '/file' + '{:03d}'.format(i) + '.txt'
+            if i == 0:
+                lines = lines1
+            else:
+                lines = lines2
+            content = '\n'.join(lines)
+            with open(output_file, 'w') as file:
+                file.write(content)
+
+        process_data = SheepData()
+
+        # call the function under test
+        result_df = process_data.read_data(test_folder)
+
+        # verify that results are consistent with expectations
+        expected_data = lines1 + lines2 * 2
+        expected_data = pd.read_csv(StringIO('\n'.join(expected_data)))
+        try:
+            pd.testing.assert_frame_equal(result_df, expected_data)
+            print("data_clean.read_data is well!")
+        except AssertionError:
+            print("data_clean.read_data is wrong!")
+
+
+        result_df = process_data.clean_data(result_df)
+        result_df = result_df.reset_index(drop=True)
+        expected_data = ['ACCEL_X,ACCEL_Y,ACCEL_Z,DATE'] + ['-175,300,500', '-185,301,600'] * 5
+        expected_data = pd.read_csv(StringIO('\n'.join(expected_data)))
+        expected_data.iloc[0, 3] = pd.to_datetime('11 2 2023 3 40 28', format='%d %m %Y %H %M %S')
+        expected_data.iloc[:, :1] = expected_data.iloc[:, :1].astype(str)
+        # expected_data = expected_data.where(pd.notna(expected_data), None)
+        try:
+            pd.testing.assert_frame_equal(result_df, expected_data)
+            print('data_clean.clean_data is well!')
+        except AssertionError:
+            print('data_clean.clean_data is wrong!')
+
+        data = {'A': [1, 2, 3], 'B': [4, 5, 6]}
+        df = pd.DataFrame(data)
+        file_path = "test_output.csv"
+        process_data.save_to_csv(df, file_path)
+        try:
+            self.assertTrue(os.path.exists(file_path))
+            df_read = pd.read_csv(file_path)
+            os.remove(file_path)
+            try:
+                pd.testing.assert_frame_equal(df, df_read)
+                print('data_clean.save_to_csv is well!')
+            except AssertionError:
+                print('data_clean.save_to_csv is wrong! Saved data is wrong!')
+        except AssertionError:
+            print('data_clean.save_to_csv is wrong! There is no csv file!')
+
+        # test_process
+        process_data.process("sheepone")
+        file_path = "./test_data/ACCEL_sheepone.csv"
+        try:
+            self.assertTrue(os.path.exists(file_path))
+            data = pd.read_csv("./test_data/ACCEL_sheepone.csv")
+            expected_data.iloc[:, :1] = expected_data.iloc[:, :1].astype(np.int64)
+            expected_data.iloc[0, 3] = str(expected_data.iloc[0, 3])
+            try:
+                pd.testing.assert_frame_equal(data, expected_data)
+                print('data_clean.process is well!')
+            except AssertionError:
+                print('data_clean.process is wrong! Saved data is wrong!')
+            shutil.rmtree(test_folder)
+            os.remove('test_data/ACCEL_sheepone.csv')
+        except AssertionError:
+            print('data_clean.process is wrong! There is no csv file!')
+
+
+
+
+
+
+# if __name__ == '__main__':
+#     unittest.main()
