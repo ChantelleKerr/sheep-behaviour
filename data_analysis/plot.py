@@ -82,11 +82,11 @@ class AnalyseSheep():
         self.data['DATE'] = initial_date + timedelta_array
 
 
-    def plot(self, df):
-        x_accel = df.iloc[:, 0].tolist()
-        y_accel = df.iloc[:, 1].tolist()
-        z_accel = df.iloc[:, 2].tolist()
-        time_values = df.iloc[:, 3].tolist() 
+    def plot(self):
+        x_accel = self.data.iloc[:, 0].tolist()
+        y_accel = self.data.iloc[:, 1].tolist()
+        z_accel = self.data.iloc[:, 2].tolist()
+        time_values = self.data.iloc[:, 3].tolist() 
 
         fig, (ax_x, ax_y, ax_z) = plt.subplots(3, 1, sharex=True)
         ax_x.set_title(self.sheep)
@@ -153,7 +153,7 @@ class AnalyseSheep():
         self.get_average_hertz_per_second(self.data)
         self.calculate_dates()
         self.sheep = os.path.basename(self.folder_path).split(".")[0]
-        self.plot(self.data)
+        self.plot()
 
 
     def generate_report(self):
