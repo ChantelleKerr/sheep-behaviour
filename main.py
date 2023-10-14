@@ -1,3 +1,4 @@
+import logging
 import os
 import platform
 import sys
@@ -19,6 +20,8 @@ from tkmacosx import (
 from data_analysis.plot import AnalyseSheep
 from data_cleaning.data_clean import ProcessData
 
+# import logging implitation
+from logger_config import get_logger, log_func_call
 # from data_cleaning.data_clean_threaded import ProcessData_Threaded
 # from data_analysis.plot import start_analysis
 
@@ -30,8 +33,8 @@ system = platform.system()
 
 global_var_lock = threading.Lock()
 
-
 # New function for the compiled program
+@log_func_call(logging.DEBUG) # logging
 def resource_path(relative_path):
     """Get the correct resource path for PyInstaller"""
     if getattr(sys, 'frozen', False):  # The application is frozen (compiled)
@@ -40,6 +43,7 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+@log_func_call(logging.DEBUG) # logging
 def app_root_path():
     """Get the root path of the application (script or packaged executable)"""
     if getattr(sys, 'frozen', False):  # The application is frozen (compiled)
@@ -48,7 +52,13 @@ def app_root_path():
         return os.path.dirname(os.path.abspath(__file__))
 # New function for the compiled program
 
+#prepare logging function
+log_file_path = os.path.join(app_root_path(), 'app.log')
+with open(log_file_path, 'w') as f:
+    pass
+logger = get_logger(__name__)
 
+@log_func_call(logging.DEBUG) # start up logging
 def get_folders():
     global folder_paths
     if folder_paths != []:
@@ -64,6 +74,7 @@ def get_folders():
             #Checking that selected folders contain more than 1 file 
             if len(files_in_folder) <= 1:
                 messagebox.showerror("Error", "Folder: "+folder_path+" contains less than 2 files. Please select a folder which contains more than one data file.")
+                logger.warning(f"Folder: {folder_path} contains less than 2 files. from main get folder.")
                 folder_paths.pop()
                 break
             
@@ -77,6 +88,7 @@ def get_folders():
         change_mode("data cleaning")
         clean_files_button["state"] = NORMAL
 
+@log_func_call(logging.DEBUG) # start up logging
 def unthreaded_clean_files(root):
     global folder_paths
     process_data = ProcessData()
@@ -94,28 +106,34 @@ def unthreaded_clean_files(root):
             combined_data = process_data.start_read_data(path, root)
             if len(combined_data) > 0:
                 print("Cleaning data in progress")
+                logger.info("Cleaning data in progress _from main")
                 cleaned_data = process_data.start_clean_data(root, combined_data)
 
                 combined_data = [] # free memory
                 print("Completed data cleaning")
-            
+                logger.info("Completed data cleaning _from main")
+
                 clean_data_folder = path_to_folder+"/"+sheep_name+"_cleaned_data"
 
                 if os.path.isdir(clean_data_folder) == False:
                     os.mkdir(clean_data_folder)
 
                 print("Writing to CSV in progress")
+                logger.info("Writing to CSV in progress _from main")
                 process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", root)
                 print("Completed writing")
+                logger.info("Completed writing _from main: file clean")
                 cleaned_data = [] # Free memory
 
                 messagebox.showinfo("Success", "Successfully cleaned selected data files")
                 webbrowser.open('file:///'+path_to_folder)
             else:
                 messagebox.showerror("Error", "Folder does not contain a file with a starting date. Please try again.")
+                logger.warning("Folder does not contain a file with a starting date. from main: file clean")
                 label_restart()
     label_restart()
 
+@log_func_call(logging.DEBUG) # start up logging
 def label_restart():
     global folder_paths
     folder_paths = [] #reset folder_paths for next load of folders
@@ -124,9 +142,11 @@ def label_restart():
     load_files_button["state"] = NORMAL
     clean_files_button["state"] = DISABLED
 
+@log_func_call(logging.DEBUG) # start up logging
 def update_status(status_text):
     operation_status.config(text=status_text)
 
+@log_func_call(logging.DEBUG) # start up logging
 def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end_minute):
         global analysed_sheep
         global sheep_file
@@ -141,6 +161,7 @@ def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end
             # Compare the datetime objects
             if date_time1 >= date_time2:
                 messagebox.showinfo("Failure", "The first date is not before or the same as the second date. Please try again.")
+                logger.warning("The first date is not before or the same as the second date. from main: analysis")
             else:
                 update_status("Please Wait... Plotting data")
                 plot_amp["state"] = NORMAL
@@ -158,13 +179,16 @@ def start_analysis(start_date, end_date, start_hour, start_minute, end_hour, end
                 avg_hertz.config(text=analysed_sheep.avg_hertz)
         else:
             messagebox.showinfo("Failure", "Incorrectly chosen DateTime for analysis. Please try again.")
+            logger.warning("Incorrectly chosen DateTime for analysis.")
 
 #Calendar defocus so it doesn't highlight the calendar when pressed
+@log_func_call(logging.DEBUG) # start up logging
 def defocus(event):
     event.widget.master.focus_set()
     event.widget.master.selection_clear()
 
 # Selects and holds a sheep csv file from a cleaned sheep directory.
+@log_func_call(logging.DEBUG) # start up logging
 def select_sheep():
     global sheep_file
     global analysed_sheep
@@ -181,13 +205,16 @@ def select_sheep():
                 change_mode("data analysis")
             else:
                 messagebox.showerror("Error", "Invalid directory name, must be a cleaned data file")
+                logger.warning(f"Invalid directory name: \"{file_name}\". from main: sheep select")
                 return
-        except:
+        except Exception as e:
+            logger.error(f"An error occurred in get_folders: {e}", exc_info=True)
             return
     else:
         return
 
 # Updates the interior content of the current file label.
+@log_func_call(logging.DEBUG) # start up logging
 def change_file(filenames):
     l = len(filenames)
     if l == 0:
@@ -207,15 +234,18 @@ def change_file(filenames):
     else:
         current_file.config(text="N/A")
         print("Error: invalid filenames")
+        logger.warning(f"Error: invalid filenames: {filenames} _from main change_file")
 
 
 # Updates the interior content of the current mode label.
+@log_func_call(logging.DEBUG) # start up logging
 def change_mode(mode):
     modes = ["data cleaning", "data analysis", "n/a"]
     
     if mode.lower() in modes:
         current_mode.config(text=mode.title())
 
+@log_func_call(logging.DEBUG) # start up logging
 def current_plot(plot_type):
     types = ["Amplitude", "XYZ"]
     
@@ -223,12 +253,14 @@ def current_plot(plot_type):
         plot_text.config(text=plot_type)
 
 #### DATA ANALYSIS FUNCTIONS
+@log_func_call(logging.DEBUG) # start up logging
 def get_report():
     operation_status.config(text="Please Wait... Saving report to CSV")
     global analysed_sheep
     analysed_sheep.generate_report()
     operation_status.config(text="Saved to CSV successfully")
 
+@log_func_call(logging.DEBUG) # start up logging
 def plot_amplitude():
     operation_status.config(text="Please Wait... Plotting Amplitude")
     global analysed_sheep
@@ -237,20 +269,21 @@ def plot_amplitude():
     analysed_sheep.plot_amplitude()
     operation_status.config(text="Plotting Amplitude Completed")
 
-
+@log_func_call(logging.DEBUG) # start up logging
 def save_plot_data():
     operation_status.config(text="Please Wait... Saving plot data to CSV")
     global analysed_sheep
     analysed_sheep.write_to_file()
     operation_status.config(text="Saved to CSV successfully")
 
+@log_func_call(logging.DEBUG) # start up logging
 def export_plot():
     global analysed_sheep
     operation_status.config(text="Exporting plot")
     analysed_sheep.export_plot()
     operation_status.config(text="Exported successfully")
 
-
+@log_func_call(logging.DEBUG) # start up logging
 def plot_accel():
     global analysed_sheep
     update_status("Please Wait... Plotting data")
@@ -266,6 +299,7 @@ if __name__ == "__main__":
     root.config(bg="red")
     root.geometry("800x700")
     root.resizable(False, False)
+    logger.info("Starting main application GUI") # start up logging
 
     #Root-> Frames
     menu_frame = Frame(root, width=220, height=700, bg='#27348b')
