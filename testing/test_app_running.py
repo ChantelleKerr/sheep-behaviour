@@ -9,7 +9,7 @@ class TestRunningStatus(unittest.TestCase):
     # Checks if the application is open and running.
     def test_app_running(self):
         running = False
-        processDevCMDLine = "sheep-behaviour/main.py"
+        processDevCMDLine = "main.py"
         processAppCMDLine = ""
         if system == "Darwin":
             processAppCMDLine = "App/Mac/main.exe"
@@ -24,14 +24,14 @@ class TestRunningStatus(unittest.TestCase):
                     if process.info['name'] == "main.exe" and ('/'.join(CMDInfo[0].rsplit("/", 3)[1:])) == processAppCMDLine:
                         running = True
                         break
-                    elif ('/'.join(CMDInfo[-1].rsplit("/", 2)[1:])) == processDevCMDLine:
+                    elif CMDInfo[-1] == processDevCMDLine or ('/'.join(CMDInfo[-1].rsplit("/", 1)[1:])) == processDevCMDLine:
                         running = True
                         break
                 elif system == "Windows":
                     if process.info['name'] == "main.exe" and ('/'.join(CMDInfo[0].rsplit("\\", 3)[1:])) == processAppCMDLine:
                         running = True
                         break
-                    elif ('/'.join(CMDInfo[-1].rsplit("/", 2)[1:])) == processDevCMDLine:
+                    elif CMDInfo[-1] == processDevCMDLine or ('/'.join(CMDInfo[-1].rsplit("/", 1)[1:])) == processDevCMDLine:
                         running = True
                         break
                     
