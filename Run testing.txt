@@ -1,0 +1,3 @@
+import test_processdata
+t = test_processdata.Test_processdata()
+t.test_ProcessData()
