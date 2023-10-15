@@ -72,6 +72,7 @@ class AnalyseSheep():
         '''
         Since we only have dates for every minute we need to calculate the dates inbetween based on the average hertz
         '''
+        #print(f"Dates: {self.data['DATE']}")
         initial_date = self.data['DATE'].iloc[0]
         num_rows = len(self.data)
         
