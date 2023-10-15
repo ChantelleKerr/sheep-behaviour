@@ -2,7 +2,7 @@
 
 ## Run All Tests
 
-> From any directory equal to or above testing
+> From any directory equal to or above testing.
 
 ```
 python -m unittest -v
