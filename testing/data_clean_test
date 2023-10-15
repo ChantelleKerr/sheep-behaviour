@@ -97,9 +97,5 @@ class TestProcessData(unittest.TestCase):
             print('data_clean.process is wrong! There is no csv file!')
 
 
-
-
-
-
-# if __name__ == '__main__':
-#     unittest.main()
+if __name__ == '__main__':
+    unittest.main()
