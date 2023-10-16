@@ -85,9 +85,9 @@ class Test_processdata(unittest.TestCase):
         ### Test if they are the same
         try:
             pd.testing.assert_frame_equal(cleaned_df, cleaned_test_df)
-            print("函数start_clean_data()，没有问题。")
+            print("Function start_clean_data(), no problem.")
         except AssertionError:
-            print("函数start_clean_data()，存在问题。")
+            print("There is a problem with the function start_clean_data().")
 
         ## 3.Test the start_save_to_csv() function
         ### Use the function under test
