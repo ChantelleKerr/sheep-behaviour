@@ -29,6 +29,7 @@ clean_data_folder = None
 sheep_file = None
 analysed_sheep = None
 folder_paths = []
+cleaned_data_batch_folder = None
 system = platform.system()
 
 global_var_lock = threading.Lock()
@@ -93,6 +94,8 @@ def unthreaded_clean_files(root):
     global folder_paths
     process_data = ProcessData()
     
+    count = 0
+    cleaned = False
     for tuple in folder_paths:
         for path in tuple:
             if system == "Darwin":
@@ -103,6 +106,12 @@ def unthreaded_clean_files(root):
             path_to_folder = folder_path_list[0]
             sheep_name = folder_path_list[1]
 
+            if count == 0:
+                global cleaned_data_batch_folder
+                cleaned_data_batch_folder = path_to_folder + '/cleaned_data_files'
+                count = 1
+
+            print(cleaned_data_batch_folder)
             combined_data = process_data.start_read_data(path, root)
             if len(combined_data) > 0:
                 print("Cleaning data in progress")
@@ -113,24 +122,23 @@ def unthreaded_clean_files(root):
                 print("Completed data cleaning")
                 logger.info("Completed data cleaning _from main")
 
-                clean_data_folder = path_to_folder+"/"+sheep_name+"_cleaned_data"
-
-                if os.path.isdir(clean_data_folder) == False:
-                    os.mkdir(clean_data_folder)
+                if os.path.isdir(cleaned_data_batch_folder) == False:
+                    os.mkdir(cleaned_data_batch_folder)
 
                 print("Writing to CSV in progress")
                 logger.info("Writing to CSV in progress _from main")
-                process_data.start_save_to_csv(cleaned_data,clean_data_folder+"/"+sheep_name+".csv", root)
+                process_data.start_save_to_csv(cleaned_data,cleaned_data_batch_folder+"/"+sheep_name+".csv", root)
                 print("Completed writing")
                 logger.info("Completed writing _from main: file clean")
                 cleaned_data = [] # Free memory
-
-                messagebox.showinfo("Success", "Successfully cleaned selected data files")
-                webbrowser.open('file:///'+path_to_folder)
+                cleaned = True
             else:
                 messagebox.showerror("Error", "Folder does not contain a file with a starting date. Please try again.")
                 logger.warning("Folder does not contain a file with a starting date. from main: file clean")
-                label_restart()
+                label_restart() 
+    if cleaned == True:
+        messagebox.showinfo("Success", "Successfully cleaned selected data files")
+        webbrowser.open('file:///'+cleaned_data_batch_folder)           
     label_restart()
 
 @log_func_call(logging.DEBUG) # start up logging
