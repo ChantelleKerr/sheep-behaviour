@@ -2,7 +2,8 @@ import copy
 import csv
 import os
 from datetime import datetime
-
+import matplotlib
+matplotlib.use('tkAgg')
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
