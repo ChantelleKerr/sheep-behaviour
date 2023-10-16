@@ -29,7 +29,7 @@ class ProcessData():
         for idx, file in enumerate(file_names):
             # We only want to process 34 days worth of files
             if day_counter >= MAX_EXPERIMENT_DAYS:
-                    break
+                break
             
             if file.endswith('.txt'):
                 print(f'Processing: {file}')
