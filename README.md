@@ -37,6 +37,7 @@ pip install -r requirements.txt
 ```
 python3 main.py or python main.py
 ```
+
 ## Run test_data_analysis_plot.py
 
 ```
@@ -45,4 +46,12 @@ t = test_data_analysis_plot.Testdata_analysis_plot()
 t.setUp()
 t.test_prepare_data()
 t.test_function()
+```
+
+## Run test_processdata.py
+
+```
+import test_processdata
+t = test_processdata.Test_processdata()
+t.test_ProcessData()
 ```
