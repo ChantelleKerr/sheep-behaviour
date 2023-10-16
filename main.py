@@ -111,7 +111,6 @@ def unthreaded_clean_files(root):
                 cleaned_data_batch_folder = path_to_folder + '/cleaned_data_files'
                 count = 1
 
-            print(cleaned_data_batch_folder)
             combined_data = process_data.start_read_data(path, root)
             if len(combined_data) > 0:
                 print("Cleaning data in progress")
